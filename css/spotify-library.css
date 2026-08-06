@@ -1,0 +1,578 @@
+/* ==========================================================================
+   PERSONAL-WORKSPACE — SPOTIFY LIBRARY STYLES (SPOTIFY-LIBRARY.CSS)
+   Semua style menggunakan CSS variables dari themes.css.
+   Tidak ada override terhadap komponen lain di luar Spotify Library.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   KONTAINER UTAMA SECTION SPOTIFY LIBRARY
+   -------------------------------------------------------------------------- */
+#spotifyPlayerContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: visible;
+    background-color: transparent;
+    border: none;
+}
+
+/* --------------------------------------------------------------------------
+   PLAYER IFRAME AREA
+   -------------------------------------------------------------------------- */
+.sl-player-area {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    overflow: hidden;
+    margin-bottom: 1.25rem;
+}
+
+.sl-player-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sl-player-header-icon {
+    font-size: 0.9rem;
+}
+
+.sl-player-header-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sl-player-header-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background-color: #1DB954;
+    color: #ffffff;
+}
+
+.sl-iframe-wrapper {
+    position: relative;
+    min-height: 100px;
+}
+
+.sl-iframe-loading {
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.sl-iframe-loading-spinner {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-top-color: #1DB954;
+    border-radius: 50%;
+    animation: sl-spin 0.7s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+@keyframes sl-spin {
+    to { transform: rotate(360deg); }
+}
+
+.sl-iframe-player {
+    display: block;
+    width: 100%;
+    height: 152px;
+    border: none;
+    border-radius: 0;
+}
+
+.sl-iframe-fallback {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.sl-iframe-fallback-icon {
+    font-size: 1.75rem;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.sl-iframe-fallback p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.sl-spotify-open-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background-color: #1DB954;
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.sl-spotify-open-btn:hover {
+    opacity: 0.88;
+}
+
+/* --------------------------------------------------------------------------
+   FORM TAMBAH LINK
+   -------------------------------------------------------------------------- */
+.sl-add-form {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sl-add-form:focus-within {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.sl-add-form-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sl-form-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.sl-form-name {
+    flex: 1;
+    min-width: 120px;
+}
+
+.sl-form-url {
+    flex: 2.5;
+    min-width: 180px;
+}
+
+.sl-form-input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.82rem;
+    font-family: inherit;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-primary);
+    transition: border-color 0.2s ease;
+}
+
+.sl-form-input::placeholder {
+    color: var(--text-muted);
+}
+
+.sl-form-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.sl-form-input.sl-input-error {
+    border-color: var(--status-danger-text);
+}
+
+.sl-add-btn {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background-color: var(--text-primary);
+    color: var(--bg-primary);
+    border: 1px solid var(--text-primary);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    align-self: flex-start;
+}
+
+.sl-add-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.sl-add-btn:active {
+    transform: translateY(0);
+}
+
+.sl-form-message {
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.65rem;
+    border-radius: 0.4rem;
+    display: none;
+}
+
+.sl-form-message.sl-msg-error {
+    display: block;
+    color: var(--status-danger-text);
+    background-color: var(--status-danger-bg);
+    border: 1px solid var(--status-danger-border);
+}
+
+.sl-form-message.sl-msg-success {
+    display: block;
+    color: var(--status-success-text);
+    background-color: var(--status-success-bg);
+    border: 1px solid var(--status-success-border);
+}
+
+/* --------------------------------------------------------------------------
+   LIBRARY SECTION
+   -------------------------------------------------------------------------- */
+.sl-library-section {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.sl-library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+}
+
+.sl-library-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.sl-library-title {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.sl-library-count {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    background-color: var(--accent-primary-light);
+    color: var(--accent-primary);
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+}
+
+.sl-clear-all-btn {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.3rem 0.7rem;
+    background: none;
+    border: 1px solid var(--status-danger-border);
+    color: var(--status-danger-text);
+    border-radius: 0.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: none; /* Hanya muncul jika ada item */
+}
+
+.sl-clear-all-btn.sl-visible {
+    display: block;
+}
+
+.sl-clear-all-btn:hover {
+    background-color: var(--status-danger-bg);
+}
+
+/* --------------------------------------------------------------------------
+   EMPTY STATE
+   -------------------------------------------------------------------------- */
+.sl-empty-state {
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+}
+
+.sl-empty-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.6rem;
+    opacity: 0.5;
+}
+
+.sl-empty-text {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   LIBRARY LIST ITEMS
+   -------------------------------------------------------------------------- */
+.sl-library-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sl-library-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.15s ease;
+    position: relative;
+}
+
+.sl-library-item:last-child {
+    border-bottom: none;
+}
+
+.sl-library-item:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.sl-library-item.sl-item-playing {
+    background-color: var(--accent-primary-light);
+}
+
+.sl-item-type-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    width: 1.6rem;
+    text-align: center;
+    line-height: 1;
+}
+
+.sl-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.sl-item-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.sl-item-playing .sl-item-name {
+    color: var(--accent-primary);
+}
+
+.sl-item-type-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+.sl-item-playing-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.12rem 0.45rem;
+    background-color: #1DB954;
+    color: #ffffff;
+    border-radius: 999px;
+    margin-left: 0.4rem;
+    display: none;
+}
+
+.sl-item-playing .sl-item-playing-badge {
+    display: inline;
+}
+
+.sl-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.sl-play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #1DB954;
+    background: none;
+    color: #1DB954;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sl-play-btn:hover,
+.sl-item-playing .sl-play-btn {
+    background-color: #1DB954;
+    color: #ffffff;
+}
+
+.sl-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sl-delete-btn:hover {
+    border-color: var(--status-danger-border);
+    color: var(--status-danger-text);
+    background-color: var(--status-danger-bg);
+}
+
+/* --------------------------------------------------------------------------
+   CONFIRM DIALOG (CLEAR ALL)
+   -------------------------------------------------------------------------- */
+.sl-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background-color: var(--bg-overlay);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    animation: sl-fade-in 0.2s ease;
+}
+
+@keyframes sl-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.sl-confirm-box {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    padding: 1.75rem 1.5rem;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+    animation: sl-pop-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sl-pop-in {
+    from { transform: scale(0.93) translateY(6px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.sl-confirm-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.sl-confirm-desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+    line-height: 1.55;
+}
+
+.sl-confirm-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
+
+.sl-confirm-cancel {
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.sl-confirm-cancel:hover {
+    border-color: var(--border-hover);
+    background-color: var(--bg-tertiary);
+}
+
+.sl-confirm-ok {
+    padding: 0.5rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background-color: var(--status-danger-text);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.sl-confirm-ok:hover {
+    opacity: 0.88;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE ADJUSTMENTS
+   -------------------------------------------------------------------------- */
+@media (max-width: 600px) {
+    .sl-form-row {
+        flex-direction: column;
+    }
+
+    .sl-form-name,
+    .sl-form-url {
+        flex: none;
+        width: 100%;
+    }
+
+    .sl-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .sl-library-item {
+        padding: 0.65rem 1rem;
+    }
+}
