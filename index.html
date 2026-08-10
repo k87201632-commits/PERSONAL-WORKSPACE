@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/spotify-library.css">
+    <link rel="stylesheet" href="css/music-system.css">
 </head>
 <body>
 
@@ -131,13 +132,25 @@
 
             </section>
 
-            <!-- Spotify Music Player -->
-            <section style="margin-bottom: 2.5rem;" class="stagger-item stagger-3">
+            <!-- Music Player System V2 -->
+            <section style="margin-bottom: 2.5rem;" class="stagger-item stagger-3" id="musicSystemSection">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="font-size: 1.25rem; font-weight: 800;" class="font-serif">🎵 Musik Belajar</h2>
-                    <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Embed · No API</span>
+                    
+                    <!-- Mode Switcher -->
+                    <div class="music-mode-switcher" id="musicModeSwitcher">
+                        <button id="modeLocalBtn" class="music-mode-btn active" onclick="if(window.musicController) window.musicController.setMode('local')">LOCAL</button>
+                        <button id="modeSpotifyBtn" class="music-mode-btn" onclick="if(window.musicController) window.musicController.setMode('spotify')">SPOTIFY</button>
+                    </div>
                 </div>
-                <div id="spotifyPlayerContainer">
+
+                <!-- Container untuk Local Music -->
+                <div id="localMusicContainer" style="display: block;">
+                    <!-- Diinjeksi oleh local-library.js -->
+                </div>
+
+                <!-- Container untuk Spotify Music (existing) -->
+                <div id="spotifyPlayerContainer" style="display: none;">
                     <!-- Disuntikkan oleh spotify-storage.js + spotify-player.js -->
                 </div>
             </section>
@@ -188,6 +201,18 @@
     <script src="js/page-transition.js"></script>
     <script src="js/schedule.js"></script>
     <script src="js/tasks.js"></script>
+
+    <!-- Music Player System V2 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+    <script src="js/music/controller/music-controller.js"></script>
+    <script src="js/music/storage/local-music-db.js"></script>
+    <script src="js/music/lyrics/lrc-parser.js"></script>
+    <script src="js/music/lyrics/lyrics-sync.js"></script>
+    <script src="js/music/lyrics/lyrics-manager.js"></script>
+    <script src="js/music/player/local-player.js"></script>
+    <script src="js/music/library/local-library.js"></script>
+
+    <!-- Existing Spotify Player -->
     <script src="js/spotify-storage.js"></script>
     <script src="js/spotify-player.js"></script>
     <script src="js/app.js"></script>

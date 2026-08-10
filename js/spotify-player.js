@@ -4,9 +4,6 @@
 // Bergantung pada: js/spotify-storage.js (harus dimuat lebih dulu)
 // ==========================================================================
 
-// --------------------------------------------------------------------------
-// ICON PER TIPE
-// --------------------------------------------------------------------------
 const SPOTIFY_TYPE_ICONS = {
     track:    "🎵",
     playlist: "📋",
@@ -21,42 +18,41 @@ const SPOTIFY_TYPE_LABELS = {
     artist:   "Artist"
 };
 
-// ID item yang sedang diputar (state in-memory)
 let spotifyCurrentPlayingId = null;
 let globalIframeInitialized = false;
 
+// State Library UX
+let slSearchQuery = "";
+let slCurrentFilter = "all";
+let slCurrentSort = "newest";
+let slIsCollapsed = false;
+
+// State Queue & Rendering
+let slCurrentQueue = [];
+let slRenderLimit = 50;
+let slFilteredItemsCache = [];
+let slIntersectionObserver = null;
+
 // --------------------------------------------------------------------------
-// ENTRY POINT — dipanggil saat DOMContentLoaded
+// ENTRY POINT
 // --------------------------------------------------------------------------
 function initSpotifyPlayer() {
-    // 1. Inisialisasi Global Mini Player (HANYA SEKALI)
     if (!globalIframeInitialized) {
         buildGlobalMiniPlayer();
         globalIframeInitialized = true;
     }
 
     const container = document.getElementById("spotifyPlayerContainer");
-    if (!container) return; // Jika tidak di Home, kita tidak perlu memuat Library UI
-
-    // Cegah duplikasi di Home jika event dipanggil berkali-kali
+    if (!container) return;
     if (container.dataset.slInit === "1") return;
     container.dataset.slInit = "1";
 
-    // Bersihkan isi placeholder HTML awal
     container.innerHTML = "";
+    container.appendChild(slBuildAddForm());
+    container.appendChild(slBuildLibrarySection());
 
-    // 2. Add Form
-    const addForm = slBuildAddForm();
-    container.appendChild(addForm);
-
-    // 3. Library Section
-    const librarySection = slBuildLibrarySection();
-    container.appendChild(librarySection);
-
-    // 4. Load library dari localStorage
     slRenderLibrary();
 
-    // 5. Autoplay item pertama JIKA belum ada lagu yang diputar
     if (!spotifyCurrentPlayingId) {
         const library = spotifyLibraryGet();
         if (library.length > 0) {
@@ -85,11 +81,40 @@ function buildGlobalMiniPlayer() {
     iframeWrapper.className = "sl-iframe-wrapper";
     iframeWrapper.id = "slIframeWrapper";
 
+    const miniQueue = document.createElement("div");
+    miniQueue.className = "sl-mini-queue";
+    miniQueue.id = "slMiniQueue";
+    miniQueue.innerHTML = `
+        <span id="slQueueStatus">Antrean kosong</span>
+        <button class="sl-queue-shuffle-btn" id="slShuffleBtn">🔀 Shuffle Antrean</button>
+    `;
+
     area.appendChild(header);
     area.appendChild(iframeWrapper);
+    area.appendChild(miniQueue);
     
-    // Inject langsung ke body, agar kebal terhadap replace .main-content
     document.body.appendChild(area);
+
+    document.getElementById("slShuffleBtn").addEventListener("click", () => {
+        if (slCurrentQueue.length > 1) {
+            // Fisher-Yates shuffle
+            for (let i = slCurrentQueue.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [slCurrentQueue[i], slCurrentQueue[j]] = [slCurrentQueue[j], slCurrentQueue[i]];
+            }
+            slUpdateQueueStatus();
+        }
+    });
+}
+
+function slUpdateQueueStatus() {
+    const statusEl = document.getElementById("slQueueStatus");
+    if (!statusEl) return;
+    if (slCurrentQueue.length > 0) {
+        statusEl.textContent = `${slCurrentQueue.length} lagu di antrean`;
+    } else {
+        statusEl.textContent = `Antrean kosong`;
+    }
 }
 
 // --------------------------------------------------------------------------
@@ -102,44 +127,20 @@ function slBuildAddForm() {
         <div class="sl-add-form-title">➕ Tambah ke Library</div>
         <div class="sl-form-row">
             <div class="sl-form-name">
-                <input
-                    type="text"
-                    id="slInputName"
-                    class="sl-form-input"
-                    placeholder="Nama (opsional)"
-                    maxlength="80"
-                    autocomplete="off"
-                />
+                <input type="text" id="slInputName" class="sl-form-input" placeholder="Nama (opsional)" maxlength="80" autocomplete="off" />
             </div>
             <div class="sl-form-url">
-                <input
-                    type="url"
-                    id="slInputUrl"
-                    class="sl-form-input"
-                    placeholder="https://open.spotify.com/playlist/..."
-                    autocomplete="off"
-                />
+                <input type="url" id="slInputUrl" class="sl-form-input" placeholder="https://open.spotify.com/playlist/..." autocomplete="off" />
             </div>
             <button id="slAddBtn" class="sl-add-btn" type="button">Tambah</button>
         </div>
         <div id="slFormMessage" class="sl-form-message"></div>
     `;
 
-    // PERBAIKAN BUG: Gunakan form.querySelector() langsung — jauh lebih aman
-    // dari requestAnimationFrame + document.getElementById karena:
-    // 1. Tidak bergantung pada timing/rAF
-    // 2. Elemen sudah ada di dalam form element sejak innerHTML di-set
-    // 3. Tidak menyimpan closure reference yang bisa menjadi stale/null
     const btn   = form.querySelector("#slAddBtn");
     const urlEl = form.querySelector("#slInputUrl");
 
-    if (btn) {
-        // slHandleAdd membaca nilai input secara fresh via document.getElementById
-        btn.addEventListener("click", () => slCheckAuth(slHandleAdd));
-    } else {
-        console.error("[spotify-player] slBuildAddForm: #slAddBtn tidak ditemukan!");
-    }
-
+    if (btn) btn.addEventListener("click", () => slCheckAuth(slHandleAdd));
     if (urlEl) {
         urlEl.addEventListener("keydown", (e) => {
             if (e.key === "Enter") slCheckAuth(slHandleAdd);
@@ -160,57 +161,93 @@ function slBuildLibrarySection() {
     const header = document.createElement("div");
     header.className = "sl-library-header";
     header.innerHTML = `
-        <div class="sl-library-header-left">
-            <span class="sl-library-title">📚 My Library</span>
-            <span class="sl-library-count" id="slLibraryCount">0</span>
+        <div class="sl-library-header-top">
+            <div class="sl-library-header-left">
+                <span class="sl-library-title">📚 My Library</span>
+                <span class="sl-library-count" id="slLibraryCount">0</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="slLogoutBtn" class="sl-clear-all-btn" type="button" style="display: none; background: #333;">Logout</button>
+                <button id="slClearAllBtn" class="sl-clear-all-btn" type="button">Hapus Semua</button>
+                <button id="slCollapseBtn" class="sl-collapse-btn">Tutup ▴</button>
+            </div>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <button id="slLogoutBtn" class="sl-clear-all-btn" type="button" style="display: none; background: #333;">Logout</button>
-            <button id="slClearAllBtn" class="sl-clear-all-btn" type="button">Hapus Semua</button>
+        <div class="sl-controls-row" id="slControlsRow">
+            <input type="text" id="slSearchInput" class="sl-search-input" placeholder="Cari musik..." />
+            <select id="slFilterSelect" class="sl-select-input">
+                <option value="all">Semua Tipe</option>
+                <option value="track">Tracks</option>
+                <option value="playlist">Playlists</option>
+                <option value="album">Albums</option>
+                <option value="artist">Artists</option>
+            </select>
+            <select id="slSortSelect" class="sl-select-input">
+                <option value="newest">Terbaru</option>
+                <option value="oldest">Terlama</option>
+                <option value="az">A-Z</option>
+                <option value="za">Z-A</option>
+            </select>
         </div>
     `;
 
-    const listWrapper = document.createElement("div");
-    listWrapper.id = "slLibraryListWrapper";
+    const listContainer = document.createElement("div");
+    listContainer.className = "sl-list-container";
+    listContainer.id = "slLibraryListWrapper";
 
     section.appendChild(header);
-    section.appendChild(listWrapper);
+    section.appendChild(listContainer);
 
-    // PERBAIKAN BUG: Gunakan header.querySelector() langsung, bukan rAF
-    const clearBtn = header.querySelector("#slClearAllBtn");
-    if (clearBtn) {
-        clearBtn.addEventListener("click", () => slCheckAuth(slHandleClearAll));
-    } else {
-        console.error("[spotify-player] slBuildLibrarySection: #slClearAllBtn tidak ditemukan!");
-    }
+    // Event Listeners for Controls
+    header.querySelector("#slClearAllBtn").addEventListener("click", () => slCheckAuth(slHandleClearAll));
+    header.querySelector("#slLogoutBtn").addEventListener("click", slHandleLogout);
+    
+    header.querySelector("#slCollapseBtn").addEventListener("click", () => {
+        slIsCollapsed = !slIsCollapsed;
+        const btn = header.querySelector("#slCollapseBtn");
+        const controls = header.querySelector("#slControlsRow");
+        if (slIsCollapsed) {
+            btn.innerHTML = "Buka ▾";
+            listContainer.style.display = "none";
+            controls.style.display = "none";
+        } else {
+            btn.innerHTML = "Tutup ▴";
+            listContainer.style.display = "block";
+            controls.style.display = "flex";
+        }
+    });
 
-    const logoutBtn = header.querySelector("#slLogoutBtn");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", slHandleLogout);
-    }
+    const searchInput = header.querySelector("#slSearchInput");
+    searchInput.addEventListener("input", (e) => {
+        slSearchQuery = e.target.value.toLowerCase();
+        slRenderLibrary();
+    });
+
+    const filterSelect = header.querySelector("#slFilterSelect");
+    filterSelect.addEventListener("change", (e) => {
+        slCurrentFilter = e.target.value;
+        slRenderLibrary();
+    });
+
+    const sortSelect = header.querySelector("#slSortSelect");
+    sortSelect.addEventListener("change", (e) => {
+        slCurrentSort = e.target.value;
+        slRenderLibrary();
+    });
 
     return section;
 }
 
 // --------------------------------------------------------------------------
 // HANDLER: TAMBAH ITEM
-// PERBAIKAN BUG: Tidak lagi menerima parameter nameEl/urlEl dari closure.
-// Setiap kali dipanggil, ambil elemen langsung via document.getElementById
-// sehingga selalu mendapat referensi DOM yang fresh & valid.
 // --------------------------------------------------------------------------
 function slHandleAdd() {
-    // Ambil elemen segar setiap kali fungsi dipanggil
     const nameEl = document.getElementById("slInputName");
     const urlEl  = document.getElementById("slInputUrl");
     const rawUrl  = urlEl  ? urlEl.value.trim()  : "";
     const rawName = nameEl ? nameEl.value.trim() : "";
 
-    console.log("[spotify-player] slHandleAdd dipanggil. URL:", rawUrl, "| Nama:", rawName);
-    console.log("[spotify-player] urlEl:", urlEl, "nameEl:", nameEl);
-
-    // Reset state error
     if (urlEl) urlEl.classList.remove("sl-input-error");
-    slShowFormMsg("", ""); // Reset pesan
+    slShowFormMsg("", ""); 
 
     if (!rawUrl) {
         slShowFormMsg("error", "Masukkan URL Spotify terlebih dahulu.");
@@ -219,7 +256,6 @@ function slHandleAdd() {
     }
 
     const result = spotifyLibraryAdd(rawUrl, rawName);
-    console.log("[spotify-player] Hasil spotifyLibraryAdd:", result);
 
     if (!result.ok) {
         slShowFormMsg("error", result.reason);
@@ -227,7 +263,6 @@ function slHandleAdd() {
         return;
     }
 
-    // Berhasil — bersihkan input dan render ulang
     if (urlEl)  urlEl.value  = "";
     if (nameEl) nameEl.value = "";
     slShowFormMsg("success", `"${result.item.name}" berhasil ditambahkan ke library.`);
@@ -235,9 +270,6 @@ function slHandleAdd() {
     slPlayItem(result.item);
 }
 
-// --------------------------------------------------------------------------
-// HANDLER: CLEAR ALL
-// --------------------------------------------------------------------------
 function slHandleClearAll() {
     slShowConfirm(
         "Hapus Seluruh Library?",
@@ -245,42 +277,65 @@ function slHandleClearAll() {
         () => {
             spotifyLibraryClear();
             spotifyCurrentPlayingId = null;
+            slCurrentQueue = [];
             slRenderLibrary();
             slShowDefaultPlayer();
+            slUpdateQueueStatus();
         }
     );
 }
 
 // --------------------------------------------------------------------------
-// RENDER: LIBRARY LIST
+// FILTER & SORT LOGIC
+// --------------------------------------------------------------------------
+function slProcessLibrary(library) {
+    // 1. Filter
+    let filtered = library.filter(item => {
+        if (slCurrentFilter !== "all" && item.type !== slCurrentFilter) return false;
+        if (slSearchQuery && !item.name.toLowerCase().includes(slSearchQuery)) return false;
+        return true;
+    });
+
+    // 2. Sort (without affecting pins yet)
+    filtered.sort((a, b) => {
+        if (slCurrentSort === "newest") return new Date(b.createdAt) - new Date(a.createdAt);
+        if (slCurrentSort === "oldest") return new Date(a.createdAt) - new Date(b.createdAt);
+        if (slCurrentSort === "az") return a.name.localeCompare(b.name);
+        if (slCurrentSort === "za") return b.name.localeCompare(a.name);
+        return 0;
+    });
+
+    // 3. Separate Pins and Non-Pins
+    const pinned = filtered.filter(item => item.isPinned);
+    const unpinned = filtered.filter(item => !item.isPinned);
+
+    return [...pinned, ...unpinned];
+}
+
+// --------------------------------------------------------------------------
+// RENDER: LIBRARY LIST (WITH VIRTUAL/CHUNK RENDERING)
 // --------------------------------------------------------------------------
 function slRenderLibrary() {
-    const library   = spotifyLibraryGet();
-    const wrapper   = document.getElementById("slLibraryListWrapper");
-    const countEl   = document.getElementById("slLibraryCount");
-    const clearBtn  = document.getElementById("slClearAllBtn");
+    const rawLibrary = spotifyLibraryGet();
+    const wrapper = document.getElementById("slLibraryListWrapper");
+    const countEl = document.getElementById("slLibraryCount");
+    const clearBtn = document.getElementById("slClearAllBtn");
 
-    console.log("[spotify-player] slRenderLibrary: merender", library.length, "item.");
+    if (!wrapper) return;
 
-    if (!wrapper) {
-        console.warn("[spotify-player] slRenderLibrary: #slLibraryListWrapper tidak ditemukan!");
-        return;
-    }
-
-    // Update count badge
-    if (countEl) countEl.textContent = library.length;
-
-    // Toggle clear all button
-    if (clearBtn) {
-        clearBtn.classList.toggle("sl-visible", library.length > 0);
-    }
-
-    // Toggle logout button visibility
+    if (countEl) countEl.textContent = rawLibrary.length;
+    if (clearBtn) clearBtn.classList.toggle("sl-visible", rawLibrary.length > 0);
     slUpdateLogoutBtnVisibility();
 
+    // Reset render limit
+    slRenderLimit = 50;
+    
+    // Process items based on active filters and sort
+    slFilteredItemsCache = slProcessLibrary(rawLibrary);
+    
     wrapper.innerHTML = "";
 
-    if (library.length === 0) {
+    if (rawLibrary.length === 0) {
         wrapper.innerHTML = `
             <div class="sl-empty-state">
                 <span class="sl-empty-icon">🎶</span>
@@ -290,29 +345,105 @@ function slRenderLibrary() {
         return;
     }
 
+    if (slFilteredItemsCache.length === 0) {
+        wrapper.innerHTML = `
+            <div class="sl-empty-state" style="padding: 1.5rem;">
+                <p class="sl-empty-text">Tidak ada musik yang sesuai pencarian/filter.</p>
+            </div>
+        `;
+        return;
+    }
+
     const ul = document.createElement("ul");
     ul.className = "sl-library-list";
+    ul.id = "slLibraryListUl";
 
-    library.forEach(item => {
-        const li = slBuildListItem(item);
-        ul.appendChild(li);
-    });
+    // 1. Render Recently Played (Only if no search/filter applied and at the top)
+    if (slSearchQuery === "" && slCurrentFilter === "all" && slCurrentSort === "newest") {
+        const recentIds = spotifyRecentlyPlayedGet();
+        if (recentIds.length > 0) {
+            const recentGroupTitle = document.createElement("div");
+            recentGroupTitle.className = "sl-library-group-title";
+            recentGroupTitle.textContent = "Baru Diputar";
+            ul.appendChild(recentGroupTitle);
 
+            // Fetch actual items
+            const recentItems = recentIds.map(id => rawLibrary.find(i => i.id === id)).filter(Boolean);
+            recentItems.forEach(item => {
+                ul.appendChild(slBuildListItem(item, true));
+            });
+
+            const allGroupTitle = document.createElement("div");
+            allGroupTitle.className = "sl-library-group-title";
+            allGroupTitle.textContent = "Semua Library";
+            ul.appendChild(allGroupTitle);
+        }
+    }
+
+    // 2. Render initial chunk of list
+    slRenderChunk(ul, 0, slRenderLimit);
     wrapper.appendChild(ul);
+
+    // 3. Setup Intersection Observer for infinite scrolling
+    slSetupIntersectionObserver(ul, wrapper);
+}
+
+function slRenderChunk(ul, startIndex, endIndex) {
+    const chunk = slFilteredItemsCache.slice(startIndex, endIndex);
+    chunk.forEach(item => {
+        ul.appendChild(slBuildListItem(item, false));
+    });
+}
+
+function slSetupIntersectionObserver(ul, wrapper) {
+    if (slIntersectionObserver) {
+        slIntersectionObserver.disconnect();
+    }
+
+    if (slRenderLimit >= slFilteredItemsCache.length) return;
+
+    const sentinel = document.createElement("div");
+    sentinel.style.height = "1px";
+    ul.appendChild(sentinel);
+
+    slIntersectionObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            const startIndex = slRenderLimit;
+            slRenderLimit += 50;
+            const endIndex = Math.min(slRenderLimit, slFilteredItemsCache.length);
+            
+            sentinel.remove(); // Remove sentinel to append items
+            slRenderChunk(ul, startIndex, endIndex);
+            
+            if (slRenderLimit < slFilteredItemsCache.length) {
+                ul.appendChild(sentinel); // Re-append sentinel at the end
+            } else {
+                slIntersectionObserver.disconnect();
+            }
+        }
+    }, { root: wrapper, rootMargin: '100px' });
+
+    slIntersectionObserver.observe(sentinel);
 }
 
 // --------------------------------------------------------------------------
 // BUILD: SATU ITEM LIBRARY
 // --------------------------------------------------------------------------
-function slBuildListItem(item) {
+function slBuildListItem(item, isRecentBlock = false) {
     const isPlaying = spotifyCurrentPlayingId === item.id;
     const icon  = SPOTIFY_TYPE_ICONS[item.type]  || "🎵";
     const label = SPOTIFY_TYPE_LABELS[item.type] || item.type;
+    const playCount = item.playCount || 0;
 
     const li = document.createElement("li");
     li.className = "sl-library-item" + (isPlaying ? " sl-item-playing" : "");
     li.dataset.id = item.id;
 
+    // Actions icons
+    const favClass = item.isFavorite ? "active-fav" : "";
+    const favIcon = item.isFavorite ? "★" : "☆";
+    const pinClass = item.isPinned ? "active-pin" : "";
+    
     li.innerHTML = `
         <span class="sl-item-type-icon">${icon}</span>
         <div class="sl-item-info">
@@ -320,28 +451,54 @@ function slBuildListItem(item) {
                 ${slEscape(item.name)}
                 <span class="sl-item-playing-badge">▶ Diputar</span>
             </div>
-            <div class="sl-item-type-label">${label}</div>
+            <div class="sl-item-type-label">
+                <span>${label}</span>
+                <span class="sl-item-play-count">• ▶ ${playCount}</span>
+            </div>
         </div>
         <div class="sl-item-actions">
-            <button class="sl-play-btn" title="Putar" aria-label="Putar ${slEscape(item.name)}">▶</button>
-            <button class="sl-delete-btn" title="Hapus dari library" aria-label="Hapus ${slEscape(item.name)}">✕</button>
+            <button class="sl-action-icon-btn ${favClass}" title="Favorite" data-action="fav">${favIcon}</button>
+            <button class="sl-action-icon-btn ${pinClass}" title="Pin to top" data-action="pin">📌</button>
+            <button class="sl-play-btn" title="Putar" data-action="play">▶</button>
+            <button class="sl-delete-btn" title="Hapus" data-action="delete">✕</button>
         </div>
     `;
 
-    li.querySelector(".sl-play-btn").addEventListener("click", () => slPlayItem(item));
-    li.querySelector(".sl-delete-btn").addEventListener("click", () => slCheckAuth(() => slDeleteItem(item.id)));
+    // Event Delegation for buttons
+    const actions = li.querySelector(".sl-item-actions");
+    actions.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        
+        const action = btn.dataset.action;
+        if (action === "play") slPlayItem(item);
+        if (action === "delete") slCheckAuth(() => slDeleteItem(item.id));
+        if (action === "fav") {
+            spotifyLibraryToggleFavorite(item.id);
+            slRenderLibrary();
+        }
+        if (action === "pin") {
+            spotifyLibraryTogglePin(item.id);
+            slRenderLibrary();
+        }
+    });
 
     return li;
 }
 
 // --------------------------------------------------------------------------
-// AKSI: PUTAR ITEM
+// AKSI: PUTAR ITEM & BUAT QUEUE
 // --------------------------------------------------------------------------
 function slPlayItem(item) {
     const embedUrl = spotifyToEmbedUrl(item.url);
     if (!embedUrl) return;
 
     spotifyCurrentPlayingId = item.id;
+    spotifyLibraryIncrementPlayCount(item.id);
+    spotifyRecentlyPlayedAdd(item.id);
+
+    // Update Queue
+    slBuildQueueArray(item.id);
 
     // Update header player
     const titleEl = document.getElementById("slPlayerTitle");
@@ -350,11 +507,20 @@ function slPlayItem(item) {
         titleEl.textContent = `${icon} ${item.name}`;
     }
 
-    // Update iframe
     slRenderIframe(embedUrl, item.url);
+    slRenderLibrary(); // Update highlights & recently played
+}
 
-    // Re-render library list untuk update highlight
-    slRenderLibrary();
+function slBuildQueueArray(currentId) {
+    // Cari index currentId di dalam slFilteredItemsCache
+    const currentIndex = slFilteredItemsCache.findIndex(i => i.id === currentId);
+    if (currentIndex >= 0 && currentIndex < slFilteredItemsCache.length - 1) {
+        // Queue adalah sisa lagu di bawahnya
+        slCurrentQueue = slFilteredItemsCache.slice(currentIndex + 1);
+    } else {
+        slCurrentQueue = [];
+    }
+    slUpdateQueueStatus();
 }
 
 // --------------------------------------------------------------------------
@@ -364,7 +530,6 @@ function slRenderIframe(embedUrl, originalUrl) {
     const wrapper = document.getElementById("slIframeWrapper");
     if (!wrapper) return;
 
-    // Loading state
     wrapper.innerHTML = `
         <div class="sl-iframe-loading">
             <span class="sl-iframe-loading-spinner"></span>
@@ -384,11 +549,9 @@ function slRenderIframe(embedUrl, originalUrl) {
         const loadingEl = wrapper.querySelector(".sl-iframe-loading");
         if (loadingEl) loadingEl.remove();
         iframe.style.display = "block";
-        console.log("[spotify-player] Iframe berhasil dimuat:", embedUrl);
     };
 
     iframe.onerror = () => {
-        console.error("[spotify-player] Gagal memuat iframe:", embedUrl);
         wrapper.innerHTML = `
             <div class="sl-iframe-fallback">
                 <span class="sl-iframe-fallback-icon">🎵</span>
@@ -403,15 +566,10 @@ function slRenderIframe(embedUrl, originalUrl) {
     wrapper.appendChild(iframe);
 }
 
-// --------------------------------------------------------------------------
-// DEFAULT PLAYER (saat library kosong)
-// --------------------------------------------------------------------------
 function slShowDefaultPlayer() {
     const wrapper = document.getElementById("slIframeWrapper");
     const titleEl = document.getElementById("slPlayerTitle");
-
     if (titleEl) titleEl.textContent = "Tambahkan musik untuk mulai memutar";
-
     if (wrapper) {
         wrapper.innerHTML = `
             <div class="sl-iframe-loading" style="padding: 1.75rem;">
@@ -425,47 +583,37 @@ function slShowDefaultPlayer() {
 // AKSI: HAPUS SATU ITEM
 // --------------------------------------------------------------------------
 function slDeleteItem(itemId) {
-    console.log("[spotify-player] slDeleteItem dipanggil. id:", itemId);
     const wasPlaying = spotifyCurrentPlayingId === itemId;
-
-    // Hapus dari localStorage dulu
     spotifyLibraryDelete(itemId);
 
     if (wasPlaying) {
         spotifyCurrentPlayingId = null;
-        // Ambil library yang sudah diupdate dari localStorage
+        slCurrentQueue = [];
         const updatedLibrary = spotifyLibraryGet();
-        console.log("[spotify-player] Item yang dihapus sedang diputar. Library tersisa:", updatedLibrary.length, "item.");
         if (updatedLibrary.length > 0) {
-            slPlayItem(updatedLibrary[0]); // Putar item pertama berikutnya
+            slPlayItem(updatedLibrary[0]); 
         } else {
             slShowDefaultPlayer();
         }
     } else {
-        // Hanya re-render library (iframe tidak perlu berubah)
         slRenderLibrary();
     }
 }
 
 // --------------------------------------------------------------------------
-// HELPER: TAMPILKAN PESAN FORM
+// HELPER: UI & AUTH
 // --------------------------------------------------------------------------
 function slShowFormMsg(type, text) {
     const msgEl = document.getElementById("slFormMessage");
     if (!msgEl) return;
-
-    // Reset jika type/text kosong
     if (!type || !text) {
         msgEl.className = "sl-form-message";
         msgEl.textContent = "";
         clearTimeout(msgEl._slTimeout);
         return;
     }
-
     msgEl.className = `sl-form-message sl-msg-${type}`;
     msgEl.textContent = text;
-
-    // Auto-hide setelah 5 detik
     clearTimeout(msgEl._slTimeout);
     msgEl._slTimeout = setTimeout(() => {
         msgEl.className = "sl-form-message";
@@ -473,9 +621,6 @@ function slShowFormMsg(type, text) {
     }, 5000);
 }
 
-// --------------------------------------------------------------------------
-// HELPER: KONFIRMASI DIALOG
-// --------------------------------------------------------------------------
 function slShowConfirm(title, desc, onConfirm) {
     const overlay = document.createElement("div");
     overlay.className = "sl-confirm-overlay";
@@ -489,24 +634,14 @@ function slShowConfirm(title, desc, onConfirm) {
             </div>
         </div>
     `;
-
     document.body.appendChild(overlay);
-
     overlay.querySelector("#slConfirmCancel").addEventListener("click", () => overlay.remove());
     overlay.querySelector("#slConfirmOk").addEventListener("click", () => {
         overlay.remove();
         onConfirm();
     });
-
-    // Klik di luar box → batal
-    overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) overlay.remove();
-    });
 }
 
-// --------------------------------------------------------------------------
-// HELPER: ESCAPE HTML
-// --------------------------------------------------------------------------
 function slEscape(str) {
     return String(str)
         .replace(/&/g, "&amp;")
@@ -515,15 +650,11 @@ function slEscape(str) {
         .replace(/"/g, "&quot;");
 }
 
-// --------------------------------------------------------------------------
-// HELPER: AUTHENTICATION
-// --------------------------------------------------------------------------
 function slCheckAuth(onSuccess) {
     if (sessionStorage.getItem("spotify_admin") === "true") {
         onSuccess();
         return;
     }
-    
     slShowAuthModal(onSuccess);
 }
 
@@ -554,10 +685,7 @@ function slShowAuthModal(onSuccess) {
     input.focus();
 
     const doLogin = () => {
-        const password = input.value;
-        if (!password) return;
-        
-        if (password === "050810") {
+        if (input.value === "050810") {
             sessionStorage.setItem("spotify_admin", "true");
             overlay.remove();
             slUpdateLogoutBtnVisibility();
@@ -570,14 +698,7 @@ function slShowAuthModal(onSuccess) {
 
     overlay.querySelector("#slAuthCancel").addEventListener("click", () => overlay.remove());
     loginBtn.addEventListener("click", doLogin);
-    input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") doLogin();
-    });
-
-    // Klik di luar box -> batal
-    overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) overlay.remove();
-    });
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
 }
 
 function slHandleLogout() {
@@ -588,12 +709,7 @@ function slHandleLogout() {
 
 function slUpdateLogoutBtnVisibility() {
     const btn = document.getElementById("slLogoutBtn");
-    if (btn) {
-        btn.style.display = sessionStorage.getItem("spotify_admin") === "true" ? "inline-block" : "none";
-    }
+    if (btn) btn.style.display = sessionStorage.getItem("spotify_admin") === "true" ? "inline-block" : "none";
 }
 
-// --------------------------------------------------------------------------
-// INISIALISASI
-// --------------------------------------------------------------------------
 document.addEventListener("DOMContentLoaded", initSpotifyPlayer);

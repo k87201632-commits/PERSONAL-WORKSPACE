@@ -1,12 +1,7 @@
 /* ==========================================================================
    PERSONAL-WORKSPACE — SPOTIFY LIBRARY STYLES (SPOTIFY-LIBRARY.CSS)
-   Semua style menggunakan CSS variables dari themes.css.
-   Tidak ada override terhadap komponen lain di luar Spotify Library.
    ========================================================================== */
 
-/* --------------------------------------------------------------------------
-   KONTAINER UTAMA SECTION SPOTIFY LIBRARY
-   -------------------------------------------------------------------------- */
 #spotifyPlayerContainer {
     display: flex;
     flex-direction: column;
@@ -250,22 +245,33 @@
 }
 
 /* --------------------------------------------------------------------------
-   LIBRARY SECTION
+   LIBRARY SECTION & HEADER
    -------------------------------------------------------------------------- */
 .sl-library-section {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 1rem;
     overflow: hidden;
+    position: relative;
+    transition: height 0.3s ease;
 }
 
 .sl-library-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     padding: 0.85rem 1.25rem;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--bg-tertiary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.sl-library-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
 }
 
 .sl-library-header-left {
@@ -290,6 +296,18 @@
     border: 1px solid var(--border-color);
 }
 
+.sl-collapse-btn {
+    font-size: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.sl-collapse-btn:hover {
+    color: var(--text-primary);
+}
+
 .sl-clear-all-btn {
     font-size: 0.72rem;
     font-weight: 700;
@@ -300,15 +318,76 @@
     border-radius: 0.4rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: none; /* Hanya muncul jika ada item */
+    display: none;
 }
-
 .sl-clear-all-btn.sl-visible {
     display: block;
 }
-
 .sl-clear-all-btn:hover {
     background-color: var(--status-danger-bg);
+}
+
+/* --------------------------------------------------------------------------
+   FILTER & SEARCH CONTROLS
+   -------------------------------------------------------------------------- */
+.sl-controls-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.sl-search-input {
+    flex: 1;
+    min-width: 150px;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.4rem;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+}
+.sl-search-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+.sl-select-input {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.4rem;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.sl-select-input:focus {
+    outline: none;
+    border-color: var(--border-focus);
+}
+
+/* --------------------------------------------------------------------------
+   LIST CONTAINER (SCROLLABLE)
+   -------------------------------------------------------------------------- */
+.sl-list-container {
+    max-height: 400px;
+    overflow-y: auto;
+    transition: max-height 0.3s ease;
+}
+
+/* Custom Scrollbar */
+.sl-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+.sl-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sl-list-container::-webkit-scrollbar-thumb {
+    background-color: rgba(150, 150, 150, 0.4);
+    border-radius: 4px;
+}
+.sl-list-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(150, 150, 150, 0.6);
 }
 
 /* --------------------------------------------------------------------------
@@ -341,6 +420,18 @@
     margin: 0;
 }
 
+.sl-library-group-title {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 0.5rem 1.25rem;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+}
+
 .sl-library-item {
     display: flex;
     align-items: center;
@@ -350,17 +441,15 @@
     transition: background-color 0.15s ease;
     position: relative;
 }
-
 .sl-library-item:last-child {
     border-bottom: none;
 }
-
 .sl-library-item:hover {
     background-color: var(--bg-card-hover);
 }
-
 .sl-library-item.sl-item-playing {
     background-color: var(--accent-primary-light);
+    border-left: 3px solid var(--accent-primary);
 }
 
 .sl-item-type-icon {
@@ -397,6 +486,14 @@
     letter-spacing: 0.05em;
     color: var(--text-muted);
     margin-top: 0.1rem;
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.sl-item-play-count {
+    font-size: 0.65rem;
+    color: var(--text-muted);
 }
 
 .sl-item-playing-badge {
@@ -409,7 +506,6 @@
     margin-left: 0.4rem;
     display: none;
 }
-
 .sl-item-playing .sl-item-playing-badge {
     display: inline;
 }
@@ -419,6 +515,26 @@
     align-items: center;
     gap: 0.4rem;
     flex-shrink: 0;
+}
+
+.sl-action-icon-btn {
+    background: none;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: transform 0.2s ease, color 0.2s ease;
+    padding: 0.2rem;
+}
+.sl-action-icon-btn:hover {
+    transform: scale(1.1);
+    color: var(--text-primary);
+}
+.sl-action-icon-btn.active-fav {
+    color: #FFD700;
+}
+.sl-action-icon-btn.active-pin {
+    color: var(--accent-primary);
 }
 
 .sl-play-btn {
@@ -435,7 +551,6 @@
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .sl-play-btn:hover,
 .sl-item-playing .sl-play-btn {
     background-color: #1DB954;
@@ -456,11 +571,37 @@
     cursor: pointer;
     transition: all 0.2s ease;
 }
-
 .sl-delete-btn:hover {
     border-color: var(--status-danger-border);
     color: var(--status-danger-text);
     background-color: var(--status-danger-bg);
+}
+
+/* --------------------------------------------------------------------------
+   MINI QUEUE
+   -------------------------------------------------------------------------- */
+.sl-mini-queue {
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-tertiary);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sl-queue-shuffle-btn {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 0.3rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.sl-queue-shuffle-btn:hover {
+    background-color: var(--bg-card-hover);
 }
 
 /* --------------------------------------------------------------------------
@@ -597,3 +738,4 @@
         width: auto;
     }
 }
+
