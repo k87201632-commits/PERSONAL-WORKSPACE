@@ -90,7 +90,6 @@ class LocalLibrary {
         const banner   = document.getElementById('lmSecurityBanner');
         const unlockedBar = document.getElementById('lmUnlockedBar');
         const dropZone = document.getElementById('lmDropZone');
-        const fileInput = document.getElementById('lmFileInput');
         const lockOverlay = document.getElementById('lmDropLockOverlay');
         const clearBtn = document.getElementById('lmClearAllBtn');
 
@@ -98,14 +97,12 @@ class LocalLibrary {
             if (banner)     banner.style.display = 'flex';
             if (unlockedBar) unlockedBar.style.display = 'none';
             if (dropZone)   dropZone.classList.add('lm-drop-zone-locked');
-            if (fileInput)  fileInput.disabled = true;
             if (lockOverlay) lockOverlay.style.display = 'flex';
             if (clearBtn)   clearBtn.style.display = 'none';
         } else {
             if (banner)     banner.style.display = 'none';
             if (unlockedBar) unlockedBar.style.display = 'flex';
             if (dropZone)   dropZone.classList.remove('lm-drop-zone-locked');
-            if (fileInput)  fileInput.disabled = false;
             if (lockOverlay) lockOverlay.style.display = 'none';
             if (clearBtn && this.tracks.length > 0) clearBtn.style.display = 'inline-block';
         }
@@ -129,6 +126,7 @@ class LocalLibrary {
     bindEvents() {
         const dropZone  = document.getElementById('lmDropZone');
         const fileInput = document.getElementById('lmFileInput');
+        const lockOverlay = document.getElementById('lmDropLockOverlay');
         const clearBtn  = document.getElementById('lmClearAllBtn');
         const unlockBtn = document.getElementById('lmUnlockBtn');
         const lockBtn   = document.getElementById('lmLockBtn');
@@ -146,11 +144,23 @@ class LocalLibrary {
                 if (window.musicSecurity) window.musicSecurity.lock();
             });
         }
+        
+        // Lock Overlay click (for File Picker)
+        if (lockOverlay) {
+            lockOverlay.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.musicSecurity) {
+                    window.musicSecurity.promptUnlock(() => {
+                        if (fileInput) fileInput.click();
+                    });
+                }
+            });
+        }
 
-        // Drag & Drop — check lock
+        // Drag & Drop
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (window.musicSecurity && window.musicSecurity.isLocked()) return;
             dropZone.classList.add('drag-active');
         });
 
@@ -162,59 +172,74 @@ class LocalLibrary {
             e.preventDefault();
             dropZone.classList.remove('drag-active');
 
-            if (window.musicSecurity && window.musicSecurity.isLocked()) {
-                if (typeof showToast === 'function') {
-                    showToast('🔒 Library terkunci. Buka kunci untuk menambah musik.');
-                }
-                return;
-            }
-
             if (e.dataTransfer.files.length > 0) {
-                this.handleFiles(e.dataTransfer.files);
+                if (window.musicSecurity) {
+                    window.musicSecurity.promptUnlock(() => {
+                        this.handleFiles(e.dataTransfer.files);
+                    });
+                } else {
+                    this.handleFiles(e.dataTransfer.files);
+                }
             }
         });
 
-        // File Input — check lock
+        // File Input
         fileInput.addEventListener('change', (e) => {
-            if (window.musicSecurity && window.musicSecurity.isLocked()) {
-                if (typeof showToast === 'function') {
-                    showToast('🔒 Library terkunci. Buka kunci untuk menambah musik.');
-                }
-                fileInput.value = '';
-                return;
-            }
             if (e.target.files.length > 0) {
-                this.handleFiles(e.target.files);
-            }
-        });
-
-        // Click on drop zone (triggers file picker) — check lock
-        dropZone.addEventListener('click', (e) => {
-            if (window.musicSecurity && window.musicSecurity.isLocked()) {
-                if (typeof showToast === 'function') {
-                    showToast('🔒 Library terkunci. Buka kunci untuk menambah musik.');
+                if (window.musicSecurity) {
+                    window.musicSecurity.promptUnlock(() => {
+                        this.handleFiles(e.target.files);
+                        fileInput.value = ''; // Reset input after processing
+                    });
+                } else {
+                    this.handleFiles(e.target.files);
+                    fileInput.value = '';
                 }
-                e.preventDefault();
-                e.stopPropagation();
             }
         });
 
-        // Clear All — check lock
-        clearBtn.addEventListener('click', async () => {
-            if (window.musicSecurity && window.musicSecurity.isLocked()) {
-                if (typeof showToast === 'function') {
-                    showToast('🔒 Library terkunci. Buka kunci untuk menghapus semua musik.');
-                }
-                return;
-            }
-
-            if (confirm('Hapus seluruh musik lokal?')) {
-                await window.localMusicDB.clearTracks();
-                this.tracks = [];
-                this.renderTracks();
-                this._updateSecurityUI();
-            }
+        // Clear All
+        clearBtn.addEventListener('click', () => {
+            this._safeClearLibrary();
         });
+    }
+
+    async _safeClearLibrary() {
+        if (window.musicSecurity) {
+            window.musicSecurity.promptUnlock(async () => {
+                this._executeClearLibrary();
+            });
+        } else {
+            this._executeClearLibrary();
+        }
+    }
+
+    async _executeClearLibrary() {
+        if (confirm('Hapus seluruh musik lokal?')) {
+            await window.localMusicDB.clearTracks();
+            this.tracks = [];
+            this.renderTracks();
+            this._updateSecurityUI();
+        }
+    }
+    
+    async _safeDeleteTrack(track) {
+        if (window.musicSecurity) {
+            window.musicSecurity.promptUnlock(async () => {
+                this._executeDeleteTrack(track);
+            });
+        } else {
+            this._executeDeleteTrack(track);
+        }
+    }
+    
+    async _executeDeleteTrack(track) {
+        if (confirm(`Hapus "${track.title}"?`)) {
+            await window.localMusicDB.deleteTrack(track.id);
+            this.tracks = this.tracks.filter(t => t.id !== track.id);
+            this.renderTracks();
+            this._updateSecurityUI();
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -404,20 +429,8 @@ class LocalLibrary {
                 }
             });
 
-            li.querySelector('[data-action="delete"]').addEventListener('click', async () => {
-                if (window.musicSecurity && window.musicSecurity.isLocked()) {
-                    if (typeof showToast === 'function') {
-                        showToast('🔒 Library terkunci. Buka kunci untuk menghapus musik.');
-                    }
-                    return;
-                }
-
-                if (confirm(`Hapus "${track.title}"?`)) {
-                    await window.localMusicDB.deleteTrack(track.id);
-                    this.tracks = this.tracks.filter(t => t.id !== track.id);
-                    this.renderTracks();
-                    this._updateSecurityUI();
-                }
+            li.querySelector('[data-action="delete"]').addEventListener('click', () => {
+                this._safeDeleteTrack(track);
             });
 
             list.appendChild(li);
