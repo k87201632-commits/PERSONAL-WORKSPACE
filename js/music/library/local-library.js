@@ -86,7 +86,7 @@ class LocalLibrary {
     // SECURITY UI UPDATE
     // -----------------------------------------------------------------------
     _updateSecurityUI() {
-        const locked = window.musicSecurity && window.musicSecurity.isLocked();
+        const locked = window.musicSecurity ? window.musicSecurity.isLocked() : true;
         const banner   = document.getElementById('lmSecurityBanner');
         const unlockedBar = document.getElementById('lmUnlockedBar');
         const dropZone = document.getElementById('lmDropZone');
@@ -368,7 +368,7 @@ class LocalLibrary {
 
         if (!list) return;
 
-        const locked = window.musicSecurity && window.musicSecurity.isLocked();
+        const locked = window.musicSecurity ? window.musicSecurity.isLocked() : true;
 
         countEl.textContent = this.tracks.length;
 
