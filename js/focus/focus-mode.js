@@ -350,6 +350,17 @@
         return { ..._state };
     }
 
+    window.focusMode = {
+        enter,
+        exit,
+        start,
+        pause,
+        resume,
+        reset,
+        getState,
+        registerAmbientHook,
+    };
+
     let _overlayBuilt = false;
 
     function _bindEntryButton() {
