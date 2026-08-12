@@ -1064,3 +1064,59 @@ textarea.form-control {
     .mobile-menu-btn { display: block; }
     .theme-dropdown-btn { font-size: 0.75rem; padding: 0.4rem 0.6rem; }
 }
+
+/* --------------------------------------------------------------------------
+   DYNAMIC ATMOSPHERE (Phase 4 — lightweight, no WebGL)
+   -------------------------------------------------------------------------- */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 1.2s ease, background 1.2s ease;
+}
+
+body[data-timeOfDay="morning"]::before {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.06) 0%, transparent 55%);
+}
+
+body[data-timeOfDay="afternoon"]::before {
+    opacity: 1;
+    background: linear-gradient(160deg, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+}
+
+body[data-timeOfDay="evening"]::before {
+    opacity: 1;
+    background: linear-gradient(200deg, rgba(249, 115, 22, 0.07) 0%, transparent 55%);
+}
+
+body[data-timeOfDay="night"]::before {
+    opacity: 1;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.08) 0%, transparent 45%);
+}
+
+body[data-weather="rain"]::before {
+    opacity: 1;
+    background: linear-gradient(180deg, rgba(100, 116, 139, 0.1) 0%, rgba(59, 130, 246, 0.04) 100%);
+}
+
+body[data-weather="sunny"]::before {
+    opacity: 1;
+    background: radial-gradient(circle at 85% 10%, rgba(251, 191, 36, 0.12) 0%, transparent 45%);
+}
+
+body[data-atmosphere="cozy"] .home-greeting-card {
+    box-shadow: inset 0 0 0 1px rgba(100, 116, 139, 0.12);
+}
+
+body[data-atmosphere="energetic"] .home-greeting-card {
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.15);
+}
+
+.header-nav, .main-content, .workspace-footer {
+    position: relative;
+    z-index: 1;
+}

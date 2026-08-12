@@ -122,6 +122,26 @@
                         <div class="arcade-game-name">Tic-Tac-Toe</div>
                         <div class="arcade-game-hs" id="tttHS">Wins: 0</div>
                     </button>
+                    <button class="arcade-game-card" data-game="2048" id="gameCard2048">
+                        <div class="arcade-game-icon">🔢</div>
+                        <div class="arcade-game-name">2048</div>
+                        <div class="arcade-game-hs" id="game2048HS">Best: 0</div>
+                    </button>
+                    <button class="arcade-game-card" data-game="minesweeper" id="gameCardMinesweeper">
+                        <div class="arcade-game-icon">💣</div>
+                        <div class="arcade-game-name">Minesweeper</div>
+                        <div class="arcade-game-hs" id="minesweeperHS">Wins: 0</div>
+                    </button>
+                    <button class="arcade-game-card" data-game="reaction" id="gameCardReaction">
+                        <div class="arcade-game-icon">⚡</div>
+                        <div class="arcade-game-name">Reaction</div>
+                        <div class="arcade-game-hs" id="reactionHS">Best: —</div>
+                    </button>
+                    <button class="arcade-game-card" data-game="flappy" id="gameCardFlappy">
+                        <div class="arcade-game-icon">🪽</div>
+                        <div class="arcade-game-name">Flappy Mini</div>
+                        <div class="arcade-game-hs" id="flappyHS">Best: 0</div>
+                    </button>
                 </div>
             </section>
 
@@ -191,6 +211,76 @@
                         </div>
                     </div>
 
+                    <!-- 2048 -->
+                    <div class="arcade-game-panel" id="panel2048" style="display:none">
+                        <div class="arcade-game-panel-header">
+                            <span>🔢 2048</span>
+                            <div class="arcade-score-display">
+                                <span>Score: <strong id="game2048Score">0</strong></span>
+                                <span>Best: <strong id="game2048Best">0</strong></span>
+                            </div>
+                        </div>
+                        <div class="game2048-grid" id="game2048Grid"></div>
+                        <div class="arcade-btn-row" style="margin-top:1rem">
+                            <button class="arcade-action-btn" id="game2048RestartBtn">↺ Restart</button>
+                        </div>
+                        <p style="text-align:center;font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">
+                            Arrow keys / WASD · Swipe di layar
+                        </p>
+                    </div>
+
+                    <!-- MINESWEEPER -->
+                    <div class="arcade-game-panel" id="panelMinesweeper" style="display:none">
+                        <div class="arcade-game-panel-header">
+                            <span>💣 Minesweeper</span>
+                            <div class="arcade-score-display">
+                                <span>9×9 · 10 mines</span>
+                            </div>
+                        </div>
+                        <div class="minesweeper-board" id="minesweeperBoard"></div>
+                        <div id="minesweeperStatus" class="minesweeper-status">Left-click reveal · Right-click flag</div>
+                        <div class="arcade-btn-row" style="margin-top:0.75rem">
+                            <button class="arcade-action-btn" id="minesweeperRestartBtn">↺ Restart</button>
+                        </div>
+                    </div>
+
+                    <!-- REACTION TEST -->
+                    <div class="arcade-game-panel" id="panelReaction" style="display:none">
+                        <div class="arcade-game-panel-header">
+                            <span>⚡ Reaction Test</span>
+                            <div class="arcade-score-display">
+                                <span>Time: <strong id="reactionTime">—</strong></span>
+                                <span>Best: <strong id="reactionBest">—</strong></span>
+                                <span>Avg: <strong id="reactionAvg">—</strong></span>
+                            </div>
+                        </div>
+                        <div class="reaction-pad reaction-pad-idle" id="reactionPad">
+                            <span class="reaction-title">Tap to Start</span>
+                            <span class="reaction-sub">Klik untuk mulai</span>
+                        </div>
+                        <div class="arcade-btn-row" style="margin-top:0.75rem">
+                            <button class="arcade-action-btn" id="reactionRestartBtn">↺ Reset</button>
+                        </div>
+                    </div>
+
+                    <!-- FLAPPY MINI -->
+                    <div class="arcade-game-panel" id="panelFlappy" style="display:none">
+                        <div class="arcade-game-panel-header">
+                            <span>🪽 Flappy Mini</span>
+                            <div class="arcade-score-display">
+                                <span>Score: <strong id="flappyScore">0</strong></span>
+                                <span>Best: <strong id="flappyBest">0</strong></span>
+                            </div>
+                        </div>
+                        <canvas id="flappyCanvas" class="arcade-canvas"></canvas>
+                        <div class="arcade-btn-row" style="margin-top:0.75rem">
+                            <button class="arcade-action-btn" id="flappyRestartBtn">↺ Restart</button>
+                        </div>
+                        <p style="text-align:center;font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">
+                            Tap / Space to flap
+                        </p>
+                    </div>
+
                 </div>
             </section>
 
@@ -243,6 +333,10 @@
     <script src="js/arcade/games/snake.js"></script>
     <script src="js/arcade/games/memory.js"></script>
     <script src="js/arcade/games/tictactoe.js"></script>
+    <script src="js/arcade/games/game2048.js"></script>
+    <script src="js/arcade/games/minesweeper.js"></script>
+    <script src="js/arcade/games/reaction-test.js"></script>
+    <script src="js/arcade/games/flappy-mini.js"></script>
 
     <!-- Arcade Main -->
     <script src="js/arcade/arcade-main.js"></script>

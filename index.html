@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/spotify-library.css">
     <link rel="stylesheet" href="css/music-system.css">
+    <link rel="stylesheet" href="css/focus-mode.css">
 </head>
 <body>
 
@@ -85,10 +86,12 @@
             <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;" class="stagger-item stagger-1">
                 
                 <!-- Salam & Tanggal -->
-                <div class="workspace-card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: center;">
-                    <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 0.5rem;" id="greetingText">Selamat Datang,</span>
+                <div class="workspace-card home-greeting-card" style="padding: 1.5rem; display: flex; flex-direction: column; justify-content: center;">
+                    <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; margin-bottom: 0.5rem;" id="greetingText">Memuat sapaan...</span>
                     <h1 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem;" class="font-serif" id="userGreeting">Ridho Dharmawan</h1>
                     <p style="font-size: 0.9rem; color: var(--accent-primary); font-weight: 700;" id="realtimeDate">Memuat tanggal...</p>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; margin-top: 0.35rem;" id="weatherLabel"></p>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;" id="weatherMessage"></p>
                 </div>
 
                 <!-- Jam Real-time -->
@@ -96,6 +99,13 @@
                     <div style="font-size: 3rem; font-weight: 900; letter-spacing: 0.05em; font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1;" id="realtimeClock">00:00</div>
                     <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-top: 0.5rem;">Waktu Sistem Lokal</div>
                 </div>
+
+                <!-- Focus Mode Entry -->
+                <button type="button" class="workspace-card focus-entry-card" id="focusModeEntryBtn" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid var(--border-color); font-family: inherit; color: inherit;">
+                    <div style="font-size: 2rem; margin-bottom: 0.35rem;">🎯</div>
+                    <div style="font-size: 1rem; font-weight: 800;" class="font-serif">Focus Mode</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-top: 0.35rem;">Mulai sesi fokus 25 menit</div>
+                </button>
 
             </section>
 
@@ -197,8 +207,12 @@
     <!-- Modul Logika JavaScript -->
     <script src="js/display-mode.js"></script>
     <script src="js/clock.js"></script>
+    <script src="js/home/weather-provider.js"></script>
+    <script src="js/home/dynamic-greeting.js"></script>
     <script src="js/loading-screen.js"></script>
     <script src="js/toast.js"></script>
+    <script src="js/focus/focus-storage.js"></script>
+    <script src="js/focus/focus-mode.js"></script>
     <script src="js/modal.js"></script>
     <script src="js/init-lifecycle.js"></script>
     <script src="js/page-transition.js"></script>

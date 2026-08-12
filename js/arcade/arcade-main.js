@@ -10,8 +10,15 @@
     // GAME PANEL SWITCHING
     // -----------------------------------------------------------------------
     function _showGame(game) {
-        const panels = ['panelSnake', 'panelMemory', 'panelTicTacToe'];
-        const panelMap = { snake: 'panelSnake', memory: 'panelMemory', tictactoe: 'panelTicTacToe' };
+        const panels = [
+            'panelSnake', 'panelMemory', 'panelTicTacToe',
+            'panel2048', 'panelMinesweeper', 'panelReaction', 'panelFlappy'
+        ];
+        const panelMap = {
+            snake: 'panelSnake', memory: 'panelMemory', tictactoe: 'panelTicTacToe',
+            '2048': 'panel2048', minesweeper: 'panelMinesweeper',
+            reaction: 'panelReaction', flappy: 'panelFlappy',
+        };
 
         panels.forEach(id => {
             const el = document.getElementById(id);
@@ -39,10 +46,18 @@
         const snakeStats = window.arcadeStorage.getGameStats('snake');
         const memStats   = window.arcadeStorage.getGameStats('memory');
         const tttStats   = window.arcadeStorage.getGameStats('tictactoe');
+        const g2048Stats = window.arcadeStorage.getGameStats('2048');
+        const mineStats  = window.arcadeStorage.getGameStats('minesweeper');
+        const reactStats = window.arcadeStorage.getGameStats('reaction');
+        const flappyStats = window.arcadeStorage.getGameStats('flappy');
 
         const snakeHsCard = document.getElementById('snakeHS');
         const memHsCard   = document.getElementById('memoryHS');
         const tttHsCard   = document.getElementById('tttHS');
+        const g2048HsCard = document.getElementById('game2048HS');
+        const mineHsCard  = document.getElementById('minesweeperHS');
+        const reactHsCard = document.getElementById('reactionHS');
+        const flappyHsCard = document.getElementById('flappyHS');
 
         if (snakeHsCard) snakeHsCard.textContent = `Best: ${snakeStats.highScore || 0}`;
         if (memHsCard) {
@@ -51,6 +66,13 @@
             memHsCard.textContent = `Best: ${bmDisplay} moves`;
         }
         if (tttHsCard) tttHsCard.textContent = `Wins: ${tttStats.wins || 0}`;
+        if (g2048HsCard) g2048HsCard.textContent = `Best: ${g2048Stats.highScore || 0}`;
+        if (mineHsCard) mineHsCard.textContent = `Wins: ${mineStats.wins || 0}`;
+        if (reactHsCard) {
+            const best = reactStats.bestMoves;
+            reactHsCard.textContent = isFinite(best) ? `Best: ${best}ms` : 'Best: —';
+        }
+        if (flappyHsCard) flappyHsCard.textContent = `Best: ${flappyStats.highScore || 0}`;
     }
 
     // -----------------------------------------------------------------------
@@ -70,7 +92,15 @@
     // -----------------------------------------------------------------------
     // INIT
     // -----------------------------------------------------------------------
+    let _arcadeInitDone = false;
+
     function _init() {
+        if (_arcadeInitDone) {
+            _refreshScoreCards();
+            return;
+        }
+        _arcadeInitDone = true;
+
         // Wire game selection buttons
         document.querySelectorAll('.arcade-game-card').forEach(card => {
             card.addEventListener('click', () => _showGame(card.dataset.game));
@@ -82,9 +112,13 @@
         _showGame(lastGame);
 
         // Init games
-        if (window.snakeGame)  window.snakeGame.init('snakeCanvas');
-        if (window.memoryGame) window.memoryGame.init('memoryGrid');
-        if (window.tttGame)    window.tttGame.init('tttBoard');
+        if (window.snakeGame)       window.snakeGame.init('snakeCanvas');
+        if (window.memoryGame)      window.memoryGame.init('memoryGrid');
+        if (window.tttGame)         window.tttGame.init('tttBoard');
+        if (window.game2048)        window.game2048.init('game2048Grid');
+        if (window.minesweeperGame) window.minesweeperGame.init('minesweeperBoard');
+        if (window.reactionTest)    window.reactionTest.init('reactionPad');
+        if (window.flappyMini)      window.flappyMini.init('flappyCanvas');
 
         // Init gamification
         if (window.streakManager)  window.streakManager.init();

@@ -614,3 +614,150 @@
 @media (max-width: 400px) {
     .achievement-grid { grid-template-columns: 1fr; }
 }
+
+/* --------------------------------------------------------------------------
+   2048
+   -------------------------------------------------------------------------- */
+.game2048-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    max-width: 320px;
+    margin: 0 auto;
+    position: relative;
+    background: var(--bg-tertiary);
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-color);
+}
+
+.game2048-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-weight: 800;
+    font-size: clamp(0.9rem, 4vw, 1.25rem);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    user-select: none;
+}
+
+.game2048-cell.tile-empty { opacity: 0.35; }
+.game2048-cell.tile-2    { background: #dbeafe; color: #1e3a8a; }
+.game2048-cell.tile-4    { background: #bfdbfe; color: #1e3a8a; }
+.game2048-cell.tile-8    { background: #93c5fd; color: #1e40af; }
+.game2048-cell.tile-16   { background: #60a5fa; color: #fff; }
+.game2048-cell.tile-32   { background: #3b82f6; color: #fff; }
+.game2048-cell.tile-64   { background: #2563eb; color: #fff; }
+.game2048-cell.tile-128  { background: #1d4ed8; color: #fff; font-size: 0.85em; }
+.game2048-cell.tile-256  { background: #1e40af; color: #fff; font-size: 0.85em; }
+.game2048-cell.tile-512  { background: #172554; color: #fff; font-size: 0.85em; }
+.game2048-cell.tile-1024,
+.game2048-cell.tile-2048 { background: var(--accent-primary); color: #fff; font-size: 0.75em; }
+
+.game2048-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    gap: 0.25rem;
+}
+
+.game2048-overlay small { font-weight: 600; opacity: 0.75; font-size: 0.75rem; }
+
+/* --------------------------------------------------------------------------
+   MINESWEEPER
+   -------------------------------------------------------------------------- */
+.minesweeper-board {
+    display: grid;
+    gap: 2px;
+    max-width: 320px;
+    margin: 0 auto;
+    background: var(--border-color);
+    padding: 2px;
+    border-radius: 0.5rem;
+}
+
+.minesweeper-cell {
+    aspect-ratio: 1;
+    border: none;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-weight: 800;
+    font-size: clamp(0.65rem, 2.5vw, 0.85rem);
+    cursor: pointer;
+    border-radius: 2px;
+    padding: 0;
+    font-family: inherit;
+    transition: background 0.1s;
+}
+
+.minesweeper-cell:hover:not(.revealed) { filter: brightness(1.08); }
+.minesweeper-cell.revealed { background: var(--bg-card); cursor: default; }
+.minesweeper-cell.flagged  { background: var(--accent-primary-light); }
+.minesweeper-cell.mine.revealed { background: #ef4444; color: #fff; }
+.minesweeper-cell[data-n="1"] { color: #3b82f6; }
+.minesweeper-cell[data-n="2"] { color: #22c55e; }
+.minesweeper-cell[data-n="3"] { color: #ef4444; }
+.minesweeper-cell[data-n="4"] { color: #6366f1; }
+.minesweeper-cell[data-n="5"] { color: #b45309; }
+.minesweeper-cell[data-n="6"] { color: #0891b2; }
+.minesweeper-cell[data-n="7"] { color: #374151; }
+.minesweeper-cell[data-n="8"] { color: #6b7280; }
+
+.minesweeper-status {
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+}
+
+/* --------------------------------------------------------------------------
+   REACTION TEST
+   -------------------------------------------------------------------------- */
+.reaction-pad {
+    max-width: 440px;
+    margin: 0 auto;
+    min-height: 180px;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    user-select: none;
+    border: 2px solid var(--border-color);
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.reaction-title { font-size: 1.5rem; font-weight: 900; }
+.reaction-sub   { font-size: 0.82rem; font-weight: 600; opacity: 0.85; }
+
+.reaction-pad-idle   { background: var(--bg-tertiary); color: var(--text-primary); }
+.reaction-pad-wait { background: #ef4444; color: #fff; border-color: #dc2626; }
+.reaction-pad-go     { background: #22c55e; color: #fff; border-color: #16a34a; }
+.reaction-pad-early  { background: #f59e0b; color: #fff; border-color: #d97706; }
+.reaction-pad-result { background: var(--accent-primary-light); color: var(--text-primary); border-color: var(--accent-primary); }
+
+/* More game cards on smaller screens */
+@media (max-width: 640px) {
+    .arcade-game-card {
+        min-width: calc(33% - 0.75rem);
+        max-width: none;
+        flex: 1 1 calc(33% - 0.75rem);
+        padding: 0.85rem 0.5rem;
+    }
+    .arcade-game-icon { font-size: 1.5rem; }
+    .arcade-game-name { font-size: 0.68rem; }
+}

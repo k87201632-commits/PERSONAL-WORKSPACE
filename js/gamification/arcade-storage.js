@@ -46,7 +46,11 @@
 
         // --- SCORES ---
         getScores() {
-            return _load(KEYS.SCORES, { snake: DEFAULT_GAME_STATS(), memory: DEFAULT_GAME_STATS(), tictactoe: DEFAULT_GAME_STATS() });
+            return _load(KEYS.SCORES, {
+                snake: DEFAULT_GAME_STATS(), memory: DEFAULT_GAME_STATS(), tictactoe: DEFAULT_GAME_STATS(),
+                '2048': DEFAULT_GAME_STATS(), minesweeper: DEFAULT_GAME_STATS(),
+                reaction: DEFAULT_GAME_STATS(), flappy: DEFAULT_GAME_STATS(),
+            });
         },
 
         getGameStats(game) {

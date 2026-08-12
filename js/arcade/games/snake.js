@@ -16,7 +16,7 @@
     let _intervalId = null;
     let _cols, _rows;
     let _touchStartX, _touchStartY;
-    let _tttConsecWins = 0; // for ttt streak (not used here, just snake)
+    let _listenersBound = false;
 
     // -----------------------------------------------------------------------
     // INIT
@@ -27,18 +27,21 @@
         if (!_canvas) return;
         _ctx = _canvas.getContext('2d');
 
-        // Responsive size
         _resizeCanvas();
-        window.addEventListener('resize', _resizeCanvas);
 
-        // Keyboard
+        if (_listenersBound) {
+            _loadHighScore();
+            if (!_running && !_started) _drawIdle();
+            return;
+        }
+        _listenersBound = true;
+
+        window.addEventListener('resize', _resizeCanvas);
         document.addEventListener('keydown', _onKey);
 
-        // Touch/swipe on canvas
         _canvas.addEventListener('touchstart', _onTouchStart, { passive: true });
         _canvas.addEventListener('touchend',   _onTouchEnd,   { passive: true });
 
-        // D-pad buttons
         document.querySelectorAll('#snakeDpad [data-dir]').forEach(btn => {
             btn.addEventListener('click', () => _changeDir(btn.dataset.dir));
         });
@@ -207,48 +210,93 @@
     }
 
     // -----------------------------------------------------------------------
-    // DRAW
+    // DRAW — order: background → grid → food → snake
     // -----------------------------------------------------------------------
-    function _draw() {
+    function _themeColors() {
         const style = getComputedStyle(document.documentElement);
-        const accent = style.getPropertyValue('--accent-primary').trim() || '#3b82f6';
-        const bg     = style.getPropertyValue('--bg-card').trim()      || '#111827';
+        return {
+            accent: style.getPropertyValue('--accent-primary').trim() || '#3b82f6',
+            bg:     style.getPropertyValue('--bg-card').trim() || '#111827',
+            grid:   style.getPropertyValue('--border-color').trim() || '#334155',
+            muted:  style.getPropertyValue('--text-muted').trim() || '#6b7280',
+            cell:   style.getPropertyValue('--bg-tertiary').trim() || '#1e293b',
+        };
+    }
 
+    function _drawBackground() {
+        const { bg } = _themeColors();
         _ctx.fillStyle = bg;
         _ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+    }
 
-        // Grid dots
-        _ctx.fillStyle = 'rgba(128,128,128,0.08)';
+    /** Visual grid aligned 1:1 with logical CELL size */
+    function _drawGrid() {
+        const { grid, cell } = _themeColors();
+        const w = _cols * CELL;
+        const h = _rows * CELL;
+
+        // Subtle cell fill (checkerboard-lite)
         for (let x = 0; x < _cols; x++) {
             for (let y = 0; y < _rows; y++) {
-                _ctx.fillRect(x * CELL + CELL / 2 - 1, y * CELL + CELL / 2 - 1, 2, 2);
+                if ((x + y) % 2 === 0) {
+                    _ctx.fillStyle = cell;
+                    _ctx.globalAlpha = 0.35;
+                    _ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+                }
             }
         }
+        _ctx.globalAlpha = 1;
+
+        // Grid lines
+        _ctx.strokeStyle = grid;
+        _ctx.globalAlpha = 0.55;
+        _ctx.lineWidth = 1;
+
+        for (let x = 0; x <= _cols; x++) {
+            const px = x * CELL + 0.5;
+            _ctx.beginPath();
+            _ctx.moveTo(px, 0);
+            _ctx.lineTo(px, h);
+            _ctx.stroke();
+        }
+        for (let y = 0; y <= _rows; y++) {
+            const py = y * CELL + 0.5;
+            _ctx.beginPath();
+            _ctx.moveTo(0, py);
+            _ctx.lineTo(w, py);
+            _ctx.stroke();
+        }
+        _ctx.globalAlpha = 1;
+    }
+
+    function _draw() {
+        const { accent } = _themeColors();
+
+        _drawBackground();
+        _drawGrid();
 
         // Food
         _ctx.fillStyle = '#ef4444';
         _ctx.beginPath();
-        _ctx.arc(_food.x * CELL + CELL/2, _food.y * CELL + CELL/2, CELL/2 - 2, 0, Math.PI * 2);
+        _ctx.arc(_food.x * CELL + CELL / 2, _food.y * CELL + CELL / 2, CELL / 2 - 3, 0, Math.PI * 2);
         _ctx.fill();
 
         // Snake
         _snake.forEach((seg, i) => {
             const alpha = 0.55 + (1 - i / _snake.length) * 0.45;
             _ctx.fillStyle = i === 0 ? accent : `rgba(59,130,246,${alpha})`;
-            const pad = i === 0 ? 1 : 2;
+            const pad = i === 0 ? 2 : 3;
             _ctx.beginPath();
-            _ctx.roundRect(seg.x * CELL + pad, seg.y * CELL + pad, CELL - pad*2, CELL - pad*2, 4);
+            _ctx.roundRect(seg.x * CELL + pad, seg.y * CELL + pad, CELL - pad * 2, CELL - pad * 2, 4);
             _ctx.fill();
         });
     }
 
     function _drawIdle() {
         if (!_ctx) return;
-        const style  = getComputedStyle(document.documentElement);
-        const bg     = style.getPropertyValue('--bg-card').trim() || '#111827';
-        const muted  = style.getPropertyValue('--text-muted').trim() || '#6b7280';
-        _ctx.fillStyle = bg;
-        _ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+        const { muted } = _themeColors();
+        _drawBackground();
+        _drawGrid();
         _ctx.fillStyle = muted;
         _ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
         _ctx.textAlign = 'center';
