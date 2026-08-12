@@ -1,0 +1,52 @@
+/* ==========================================================================
+   PERSONAL-WORKSPACE — FLOATING MUSIC PLAYER (FLOATING-PLAYER.CSS)
+   ========================================================================== */
+
+.fp-floating-player {
+    position: fixed !important;
+    z-index: 8200;
+    width: min(320px, calc(100vw - 1.5rem));
+    margin-bottom: 0 !important;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(12px);
+    touch-action: none;
+}
+
+.fp-floating-player .fp-drag-handle {
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+}
+
+.fp-floating-player .fp-drag-handle.is-dragging {
+    cursor: grabbing;
+}
+
+.fp-floating-player .sl-iframe-wrapper {
+    min-height: 80px;
+}
+
+@media (max-width: 768px) {
+    .fp-floating-player {
+        width: min(280px, calc(100vw - 1rem));
+        font-size: 0.92rem;
+    }
+
+    .fp-floating-player .sl-player-header {
+        padding: 0.55rem 0.75rem;
+    }
+
+    .fp-floating-player .sl-player-header-title {
+        font-size: 0.72rem;
+        max-width: 140px;
+    }
+
+    .fp-floating-player .lm-controls-row {
+        gap: 0.35rem;
+    }
+
+    .fp-floating-player .lm-control-btn {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.45rem;
+    }
+}

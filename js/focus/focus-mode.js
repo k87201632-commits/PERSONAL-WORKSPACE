@@ -17,6 +17,7 @@
     let _endTime = null;
     let _listenersBound = false;
     let _ambientHooks = [];
+    let _completeHandled = false;
 
     const _state = {
         status:         STATES.IDLE,
@@ -219,6 +220,7 @@
         if (_state.status === STATES.RUNNING) return;
         if (_state.status === STATES.COMPLETED) {
             _state.remainingMs = _state.totalMs;
+            _completeHandled = false;
         }
         _state.status = STATES.RUNNING;
         _endTime = Date.now() + _state.remainingMs;
@@ -250,6 +252,7 @@
     function reset() {
         _clearTick();
         _endTime = null;
+        _completeHandled = false;
         _state.status = STATES.IDLE;
         _state.remainingMs = _state.presetMinutes * 60 * 1000;
         _state.totalMs = _state.remainingMs;
@@ -259,6 +262,9 @@
     }
 
     function _complete() {
+        if (_completeHandled || _state.status === STATES.COMPLETED) return;
+        _completeHandled = true;
+
         _clearTick();
         _endTime = null;
         _state.status = STATES.COMPLETED;
@@ -362,6 +368,7 @@
     };
 
     let _overlayBuilt = false;
+    let _focusInitDone = false;
 
     function _bindEntryButton() {
         const entryBtn = document.getElementById('focusModeEntryBtn');
@@ -371,7 +378,20 @@
         }
     }
 
+    function _wireLifecycle() {
+        if (!window.pwLifecycle) return;
+        window.pwLifecycle.registerPageInit(
+            (_path, file) => file === 'index.html' || file === '',
+            _bindEntryButton
+        );
+    }
+
     function initFocusMode() {
+        if (_focusInitDone) {
+            _bindEntryButton();
+            return;
+        }
+        _focusInitDone = true;
         _ensureOverlay();
         if (!_overlayBuilt) {
             _overlayBuilt = true;
@@ -381,13 +401,14 @@
         _bindEntryButton();
     }
 
+    function _bootFocus() {
+        initFocusMode();
+        _wireLifecycle();
+    }
+
     if (window.pwLifecycle) {
-        window.pwLifecycle.initGlobalOnce(initFocusMode);
-        window.pwLifecycle.registerPageInit(
-            (_path, file) => file === 'index.html' || file === '',
-            _bindEntryButton
-        );
+        window.pwLifecycle.runWhenReady(_bootFocus);
     } else {
-        document.addEventListener('DOMContentLoaded', initFocusMode);
+        document.addEventListener('DOMContentLoaded', _bootFocus, { once: true });
     }
 })();

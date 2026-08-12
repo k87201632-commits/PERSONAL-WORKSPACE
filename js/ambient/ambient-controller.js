@@ -12,10 +12,10 @@
 
     /** Per-mode base loudness (before user volume slider). */
     const MODE_BASE_VOLUME = {
-        rain:  0.12,
-        calm:  0.10,
-        night: 0.08,
-        focus: 0.05,
+        rain:  0.14,
+        calm:  0.11,
+        night: 0.09,
+        focus: 0.06,
     };
 
     let _panel, _statusEl, _volumeEl, _navBtn, _modeBtns = [];
@@ -159,102 +159,121 @@
 
         if (generator === 'rain') {
             const src = ctx.createBufferSource();
-            src.buffer = _noiseBuffer(ctx, 4, 'pink');
+            src.buffer = _noiseBuffer(ctx, 5, 'pink');
             src.loop = true;
 
             const hp = ctx.createBiquadFilter();
             hp.type = 'highpass';
-            hp.frequency.value = 600;
+            hp.frequency.value = 350;
 
             const bp = ctx.createBiquadFilter();
             bp.type = 'bandpass';
-            bp.frequency.value = 2800;
-            bp.Q.value = 0.25;
+            bp.frequency.value = 1400;
+            bp.Q.value = 0.12;
+
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass';
+            lp.frequency.value = 4200;
 
             src.connect(hp);
             hp.connect(bp);
-            const g = connectGain(bp, 0.55);
+            bp.connect(lp);
+            const g = connectGain(lp, 0.22);
             src.start(0);
             _trackNode(src, g);
             _trackNode(hp, null);
             _trackNode(bp, null);
-            return true;
-        }
-
-        if (generator === 'night') {
-            const drone = ctx.createOscillator();
-            drone.type = 'sine';
-            drone.frequency.value = 52;
-            const dg = connectGain(drone, 0.035);
-            drone.start(0);
-            _trackNode(drone, dg);
-
-            const pad = ctx.createOscillator();
-            pad.type = 'triangle';
-            pad.frequency.value = 78;
-            const pg = connectGain(pad, 0.018);
-            pad.start(0);
-            _trackNode(pad, pg);
-
-            const tex = ctx.createBufferSource();
-            tex.buffer = _noiseBuffer(ctx, 6, 'brown');
-            tex.loop = true;
-            const lp = ctx.createBiquadFilter();
-            lp.type = 'lowpass';
-            lp.frequency.value = 180;
-            tex.connect(lp);
-            const tg = connectGain(lp, 0.012);
-            tex.start(0);
-            _trackNode(tex, tg);
             _trackNode(lp, null);
             return true;
         }
 
+        if (generator === 'night') {
+            const droneA = ctx.createOscillator();
+            droneA.type = 'sine';
+            droneA.frequency.value = 48;
+            const dgA = connectGain(droneA, 0.018);
+            droneA.start(0);
+            _trackNode(droneA, dgA);
+
+            const droneB = ctx.createOscillator();
+            droneB.type = 'sine';
+            droneB.frequency.value = 72;
+            const dgB = connectGain(droneB, 0.012);
+            droneB.start(0);
+            _trackNode(droneB, dgB);
+
+            const hum = ctx.createOscillator();
+            hum.type = 'triangle';
+            hum.frequency.value = 96;
+            const hg = connectGain(hum, 0.006);
+            hum.start(0);
+            _trackNode(hum, hg);
+
+            const breath = ctx.createOscillator();
+            breath.type = 'sine';
+            breath.frequency.value = 0.03;
+            const breathDepth = ctx.createGain();
+            breathDepth.gain.value = 0.004;
+            breath.connect(breathDepth);
+            breathDepth.connect(dgA.gain);
+            breathDepth.connect(dgB.gain);
+            breath.start(0);
+            _trackNode(breath, breathDepth);
+            return true;
+        }
+
         if (generator === 'calm') {
-            let leadOsc = null;
-            [196, 293.66, 392].forEach((freq, i) => {
+            [130.81, 164.81, 196].forEach((freq, i) => {
                 const osc = ctx.createOscillator();
-                osc.type = 'sine';
+                osc.type = i === 0 ? 'triangle' : 'sine';
                 osc.frequency.value = freq;
-                const g = connectGain(osc, 0.022 + i * 0.004);
+                const g = connectGain(osc, 0.028 + i * 0.005);
                 osc.start(0);
                 _trackNode(osc, g);
-                if (!leadOsc) leadOsc = osc;
-            });
 
-            if (leadOsc) {
                 const lfo = ctx.createOscillator();
                 lfo.type = 'sine';
-                lfo.frequency.value = 0.06;
+                lfo.frequency.value = 0.05 + i * 0.01;
                 const lfoG = ctx.createGain();
-                lfoG.gain.value = 6;
+                lfoG.gain.value = 1.5 + i * 0.5;
                 lfo.connect(lfoG);
-                lfoG.connect(leadOsc.frequency);
+                lfoG.connect(osc.frequency);
                 lfo.start(0);
                 _trackNode(lfo, lfoG);
-            }
+            });
+
+            const pad = ctx.createOscillator();
+            pad.type = 'sine';
+            pad.frequency.value = 261.63;
+            const padG = connectGain(pad, 0.014);
+            const swell = ctx.createOscillator();
+            swell.type = 'sine';
+            swell.frequency.value = 0.04;
+            const swellG = ctx.createGain();
+            swellG.gain.value = 0.008;
+            swell.connect(swellG);
+            swellG.connect(padG.gain);
+            pad.start(0);
+            swell.start(0);
+            _trackNode(pad, padG);
+            _trackNode(swell, swellG);
             return true;
         }
 
         if (generator === 'focus') {
             const tone = ctx.createOscillator();
             tone.type = 'sine';
-            tone.frequency.value = 174;
-            const tg = connectGain(tone, 0.012);
+            tone.frequency.value = 220;
+            const tg = connectGain(tone, 0.016);
             tone.start(0);
             _trackNode(tone, tg);
 
-            const bed = ctx.createBufferSource();
-            bed.buffer = _noiseBuffer(ctx, 3, 'brown');
-            bed.loop = true;
-            const lp = ctx.createBiquadFilter();
-            lp.type = 'lowpass';
-            lp.frequency.value = 120;
-            bed.connect(lp);
-            const bg = connectGain(lp, 0.008);
-            bed.start(0);
-            _trackNode(bed, bg);
-            _trackNode(lp, null);
+            const fifth = ctx.createOscillator();
+            fifth.type = 'sine';
+            fifth.frequency.value = 330;
+            const fg = connectGain(fifth, 0.005);
+            fifth.start(0);
+            _trackNode(fifth, fg);
             return true;
         }
 
@@ -654,8 +673,11 @@
     };
 
     if (window.pwLifecycle) {
-        window.pwLifecycle.initGlobalOnce(initAmbient);
+        window.pwLifecycle.runWhenReady(() => window.pwLifecycle.initGlobalOnce(initAmbient));
     } else {
-        document.addEventListener('DOMContentLoaded', initAmbient);
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.pwLifecycle) window.pwLifecycle.initGlobalOnce(initAmbient);
+            else initAmbient();
+        }, { once: true });
     }
 })();
