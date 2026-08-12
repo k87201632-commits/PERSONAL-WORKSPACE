@@ -125,8 +125,13 @@
     <script src="js/clock.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/modal.js"></script>
+    <script src="js/init-lifecycle.js"></script>
     <script src="js/page-transition.js"></script>
+    <script src="js/schedule.js"></script>
     <script src="js/tasks.js"></script>
+    <script src="js/subject-page.js"></script>
+    <script src="js/pages/home-page.js"></script>
+    <script src="js/pages/tugas-page.js"></script>
 
     <!-- Gamification (task completion events) -->
     <script src="js/gamification/arcade-storage.js"></script>
@@ -137,99 +142,5 @@
     <script src="js/gamification/gamification-bridge.js"></script>
 
     <script src="js/app.js"></script>
-
-    <script>
-    // Pastikan dipanggil ulang jika SPA merender ulang
-    function initTugasPage() {
-        renderGlobalStats();
-        renderSubjectFolders();
-
-        const searchInput = document.getElementById("subjectSearchInput");
-        if (searchInput) {
-            // Hapus event listener lama agar tidak dobel
-            const newSearchInput = searchInput.cloneNode(true);
-            searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-            
-            newSearchInput.addEventListener("input", (e) => {
-                renderSubjectFolders(e.target.value);
-            });
-        }
-    }
-
-    function getAllTasks() {
-        let tasks = [];
-        const saved = localStorage.getItem("personal_workspace_tasks");
-        if (saved) {
-            try { tasks = JSON.parse(saved); } catch (e) {}
-        } else if (typeof initialTasks !== "undefined") {
-            tasks = initialTasks;
-        }
-        return tasks || [];
-    }
-
-    function renderGlobalStats() {
-        if (typeof getAllTasks === "undefined") return;
-        const allTasks = getAllTasks();
-        const counts = { total: 0, completed: 0, active: 0, pending: 0 };
-        
-        if (Array.isArray(allTasks)) {
-            counts.total = allTasks.length;
-            allTasks.forEach(t => {
-                if(t.status === 'Selesai') counts.completed++;
-                else if(t.status === 'Sedang Dikerjakan') counts.active++;
-                else counts.pending++;
-            });
-        }
-
-        const totalEl = document.getElementById("globalStatTotal");
-        const compEl = document.getElementById("globalStatCompleted");
-        const activeEl = document.getElementById("globalStatActive");
-        const pendEl = document.getElementById("globalStatPending");
-
-        if (totalEl) totalEl.textContent = counts.total;
-        if (compEl) compEl.textContent = counts.completed;
-        if (activeEl) activeEl.textContent = counts.active;
-        if (pendEl) pendEl.textContent = counts.pending;
-    }
-
-    function renderSubjectFolders(query = "") {
-        const grid = document.getElementById("subjectsGrid");
-        if (!grid || typeof subjectsData === "undefined" || typeof getAllTasks === "undefined") return;
-
-        let html = "";
-        const filtered = subjectsData.filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
-        const allTasks = getAllTasks();
-        
-        filtered.forEach(subject => {
-            let subjectTasks = [];
-            if (Array.isArray(allTasks)) {
-                subjectTasks = allTasks.filter(t => t.subject === subject.name);
-            }
-            const pendingTasks = subjectTasks.filter(t => t.status !== 'Selesai').length;
-            
-            html += `
-                <div class="workspace-card" style="padding: 1.5rem; display: flex; flex-direction: column; height: 100%;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">${subject.icon}</div>
-                    <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 0.5rem;" class="font-serif">${subject.name}</h3>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; flex-grow: 1;">
-                        ${subjectTasks.length} tugas total · <span style="color: ${pendingTasks > 0 ? 'var(--status-warning-text)' : 'var(--status-success-text)'}">${pendingTasks} belum selesai</span>
-                    </p>
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                        <a href="subjects/${subject.file}" style="font-size: 0.8rem; font-weight: 700; color: var(--accent-primary);">Lihat Folder →</a>
-                        <a href="jadwal.html" style="color:var(--text-secondary); font-size: 0.8rem;">Jadwal</a>
-                    </div>
-                </div>
-            `;
-        });
-
-        grid.innerHTML = html;
-    }
-
-    // Tangani saat dimuat langsung
-    document.addEventListener("DOMContentLoaded", initTugasPage);
-    
-    // Tangani saat dimuat ulang oleh SPA (jika dipanggil global)
-    window.addEventListener("DOMContentLoaded", initTugasPage);
-    </script>
 </body>
 </html>

@@ -712,4 +712,16 @@ function slUpdateLogoutBtnVisibility() {
     if (btn) btn.style.display = sessionStorage.getItem("spotify_admin") === "true" ? "inline-block" : "none";
 }
 
-document.addEventListener("DOMContentLoaded", initSpotifyPlayer);
+function initSpotifyPlayerSafe() {
+    if (document.getElementById('spotifyPlayerContainer')) {
+        initSpotifyPlayer();
+    }
+}
+
+if (window.pwLifecycle) {
+    window.pwLifecycle.initGlobalOnce(initSpotifyPlayerSafe);
+    window.pwLifecycle.runWhenReady(initSpotifyPlayerSafe);
+    window.addEventListener('pw:page-ready', initSpotifyPlayerSafe);
+} else {
+    document.addEventListener('DOMContentLoaded', initSpotifyPlayer);
+}

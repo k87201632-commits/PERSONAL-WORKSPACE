@@ -431,9 +431,10 @@ class SubjectPageManager {
     // BIND EVENTS (form submit)
     // -------------------------------------------------------------------------
     _bindEvents() {
-        const form = document.getElementById("taskFormModal");
-        if (form) {
-            form.addEventListener("submit", (e) => {
+        const form = document.getElementById('taskFormModal');
+        if (form && !form.dataset.pwSubjectBound) {
+            form.dataset.pwSubjectBound = '1';
+            form.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this._saveTaskFromForm();
             });
@@ -488,5 +489,40 @@ class SubjectPageManager {
     }
 }
 
+// -------------------------------------------------------------------------
+// ROUTE-BASED INIT — direct load + page-transition
+// -------------------------------------------------------------------------
+function _resolveSubjectIdFromPath(path) {
+    const match = (path || '').match(/subjects\/([^/?#]+)\.html/i);
+    if (!match || typeof subjectsData === 'undefined') return null;
+    const file = match[1] + '.html';
+    const sub  = subjectsData.find(s => s.file === file);
+    return sub ? sub.id : null;
+}
+
+function _populateTaskSubjectSelect() {
+    const select = document.getElementById('formTaskSubject');
+    if (select && typeof subjectsData !== 'undefined') {
+        select.innerHTML = subjectsData.map(s =>
+            `<option value="${s.name}">${s.name}</option>`
+        ).join('');
+    }
+}
+
+function initSubjectRoute(path) {
+    const id = _resolveSubjectIdFromPath(path);
+    if (!id) return;
+    _populateTaskSubjectSelect();
+    window.subjectPage = new SubjectPageManager(id);
+}
+
+if (window.pwLifecycle) {
+    window.pwLifecycle.registerPageInit(
+        (path, _file, isSubject) => isSubject || path.includes('/subjects/') || path.includes('subjects\\'),
+        initSubjectRoute
+    );
+}
+
 // Inisialisasi dijalankan dari setiap subject HTML via:
 // window.subjectPage = new SubjectPageManager("informatika");
+// OR automatically via pwLifecycle route init above.

@@ -153,4 +153,14 @@ function renderSubjectResources(resources) {
     container.innerHTML = html;
 }
 
-document.addEventListener("DOMContentLoaded", initSubjectPage);
+if (window.pwLifecycle) {
+    window.pwLifecycle.registerPageInit(
+        (_path, file) => file === 'pelajaran.html',
+        () => initSubjectPage()
+    );
+    window.pwLifecycle.runWhenReady(() => {
+        if (document.getElementById('subjectHeaderStripe')) initSubjectPage();
+    });
+} else {
+    document.addEventListener('DOMContentLoaded', initSubjectPage);
+}

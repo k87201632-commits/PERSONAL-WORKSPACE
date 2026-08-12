@@ -56,4 +56,14 @@ function getGreetingText(hours) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", initRealtimeClock);
+function initRealtimeClock() {
+    if (window._pwClockInterval) return;
+    updateClock();
+    window._pwClockInterval = setInterval(updateClock, 1000);
+}
+
+if (window.pwLifecycle) {
+    window.pwLifecycle.runWhenReady(initRealtimeClock);
+} else {
+    document.addEventListener('DOMContentLoaded', initRealtimeClock);
+}

@@ -481,5 +481,13 @@ class LocalLibrary {
 window.localLibrary = new LocalLibrary();
 
 document.addEventListener('DOMContentLoaded', () => {
-    window.localLibrary.init();
+    if (document.getElementById('localMusicContainer')) {
+        window.localLibrary.init();
+    }
+});
+
+window.addEventListener('pw:page-ready', () => {
+    if (document.getElementById('localMusicContainer') && window.localLibrary) {
+        window.localLibrary.init();
+    }
 });

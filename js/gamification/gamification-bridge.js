@@ -12,6 +12,9 @@
     }
 
     function _setup() {
+        if (window._pwGamificationBridgeReady) return;
+        window._pwGamificationBridgeReady = true;
+
         const today = _today();
 
         window.addEventListener('game:started', (e) => {
@@ -45,5 +48,11 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', _setup);
+    if (window.pwLifecycle) {
+        window.pwLifecycle.runWhenReady(() => {
+            window.pwLifecycle.initGlobalOnce(_setup);
+        });
+    } else {
+        document.addEventListener('DOMContentLoaded', _setup);
+    }
 })();

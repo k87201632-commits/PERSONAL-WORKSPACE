@@ -109,8 +109,20 @@
         },
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        window.questManager.init();
-    });
+    if (window.pwLifecycle) {
+        window.pwLifecycle.runWhenReady(() => {
+            if (!window._pwQuestManagerReady) {
+                window._pwQuestManagerReady = true;
+                window.questManager.init();
+            }
+        });
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window._pwQuestManagerReady) {
+                window._pwQuestManagerReady = true;
+                window.questManager.init();
+            }
+        });
+    }
 
 })();

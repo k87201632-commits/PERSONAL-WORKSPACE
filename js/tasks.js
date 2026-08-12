@@ -161,32 +161,42 @@ class TaskManager {
     }
 
     bindEvents() {
-        const searchInput = document.getElementById("taskSearchInput");
-        if (searchInput) {
-            searchInput.addEventListener("input", (e) => {
+        const searchInput = document.getElementById('taskSearchInput');
+        if (searchInput && !searchInput.dataset.pwBound) {
+            searchInput.dataset.pwBound = '1';
+            searchInput.addEventListener('input', (e) => {
                 this.searchQuery = e.target.value;
                 this.renderTaskList();
             });
         }
 
-        // Subjek Filter Buttons
-        document.querySelectorAll("[data-filter-subject]").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                document.querySelectorAll("[data-filter-subject]").forEach(b => b.classList.remove("active", "btn-primary"));
-                e.target.classList.add("active", "btn-primary");
-                this.currentFilterSubject = e.target.getAttribute("data-filter-subject");
+        document.querySelectorAll('[data-filter-subject]').forEach(btn => {
+            if (btn.dataset.pwBound === '1') return;
+            btn.dataset.pwBound = '1';
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-filter-subject]').forEach(b => b.classList.remove('active', 'btn-primary'));
+                e.target.classList.add('active', 'btn-primary');
+                this.currentFilterSubject = e.target.getAttribute('data-filter-subject');
                 this.renderTaskList();
             });
         });
 
-        // Form Handler Modal Tambah/Edit Tugas
-        const taskForm = document.getElementById("taskFormModal");
-        if (taskForm) {
-            taskForm.addEventListener("submit", (e) => {
+        const taskForm = document.getElementById('taskFormModal');
+        if (taskForm && !taskForm.dataset.pwBound) {
+            taskForm.dataset.pwBound = '1';
+            taskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.saveTaskFromForm();
             });
         }
+    }
+
+    /** Re-render after SPA navigation or page swap */
+    refresh() {
+        this.loadTasks();
+        this.renderTaskList();
+        this.renderDashboardWidget();
+        this.bindEvents();
     }
 
     openCreateModal() {
@@ -316,6 +326,19 @@ class TaskManager {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    window.workspaceTasks = new TaskManager();
-});
+function ensureTaskManager() {
+    if (!window.workspaceTasks) {
+        window.workspaceTasks = new TaskManager();
+    } else {
+        window.workspaceTasks.refresh();
+    }
+}
+
+if (window.pwLifecycle) {
+    window.pwLifecycle.runWhenReady(ensureTaskManager);
+    window.addEventListener('pw:page-ready', () => {
+        if (window.workspaceTasks) window.workspaceTasks.refresh();
+    });
+} else {
+    document.addEventListener('DOMContentLoaded', ensureTaskManager);
+}

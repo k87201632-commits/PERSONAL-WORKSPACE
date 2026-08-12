@@ -148,6 +148,13 @@ class MusicController {
 // Global instance
 window.musicController = new MusicController();
 
-document.addEventListener('DOMContentLoaded', () => {
-    window.musicController.init();
-});
+function initMusicController() {
+    if (window.musicController) window.musicController.init();
+}
+
+if (window.pwLifecycle) {
+    window.pwLifecycle.initGlobalOnce(initMusicController);
+    window.pwLifecycle.runWhenReady(initMusicController);
+} else {
+    document.addEventListener('DOMContentLoaded', initMusicController);
+}

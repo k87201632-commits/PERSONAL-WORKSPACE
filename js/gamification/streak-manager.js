@@ -54,8 +54,20 @@
         },
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        window.streakManager.init();
-    });
+    if (window.pwLifecycle) {
+        window.pwLifecycle.runWhenReady(() => {
+            if (!window._pwStreakManagerReady) {
+                window._pwStreakManagerReady = true;
+                window.streakManager.init();
+            }
+        });
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window._pwStreakManagerReady) {
+                window._pwStreakManagerReady = true;
+                window.streakManager.init();
+            }
+        });
+    }
 
 })();

@@ -52,4 +52,8 @@ function initCinematicLoading() {
     runNextStep();
 }
 
-document.addEventListener("DOMContentLoaded", initCinematicLoading);
+if (window.pwLifecycle) {
+    window.pwLifecycle.runWhenReady(initCinematicLoading);
+} else {
+    document.addEventListener('DOMContentLoaded', initCinematicLoading);
+}

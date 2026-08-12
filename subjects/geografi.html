@@ -220,8 +220,12 @@
     <script src="../js/clock.js"></script>
     <script src="../js/toast.js"></script>
     <script src="../js/modal.js"></script>
+    <script src="../js/init-lifecycle.js"></script>
     <script src="../js/page-transition.js"></script>
+    <script src="../js/tasks.js"></script>
     <script src="../js/subject-page.js"></script>
+    <script src="../js/pages/home-page.js"></script>
+    <script src="../js/pages/tugas-page.js"></script>
     <script src="../js/gamification/arcade-storage.js"></script>
     <script src="../js/gamification/xp-manager.js"></script>
     <script src="../js/gamification/achievement-manager.js"></script>
@@ -229,16 +233,5 @@
     <script src="../js/gamification/streak-manager.js"></script>
     <script src="../js/gamification/gamification-bridge.js"></script>
     <script src="../js/app.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const select = document.getElementById("formTaskSubject");
-            if (select && typeof subjectsData !== "undefined") {
-                select.innerHTML = subjectsData.map(s =>
-                    `<option value="${s.name}">${s.name}</option>`
-                ).join("");
-            }
-            window.subjectPage = new SubjectPageManager("geografi");
-        });
-    </script>
 </body>
 </html>

@@ -184,8 +184,23 @@ function renderDashboardScheduleWidgets(dayName, currentMinutes) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initScheduleModule() {
     renderSchedulePage();
-    // Auto-refresh status jadwal setiap 60 detik agar status "Berlangsung/Berikutnya" selalu akurat
-    setInterval(renderSchedulePage, 60000);
-});
+    if (!window._pwScheduleInterval) {
+        window._pwScheduleInterval = setInterval(renderSchedulePage, 60000);
+    }
+}
+
+if (window.pwLifecycle) {
+    window.pwLifecycle.registerPageInit(
+        (_path, file) => file === 'jadwal.html',
+        initScheduleModule
+    );
+    window.pwLifecycle.runWhenReady(() => {
+        if (document.getElementById('scheduleGridDesktop')) initScheduleModule();
+    });
+} else {
+    document.addEventListener('DOMContentLoaded', () => {
+        initScheduleModule();
+    });
+}
