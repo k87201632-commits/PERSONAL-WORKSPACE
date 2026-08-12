@@ -23,7 +23,7 @@
 
     const DEFAULT_PREFS = () => ({
         selectedAmbient: null,
-        volume:          0.4,
+        volume:          0.55,
         enabled:         false,
         autoOnFocus:     true,
     });

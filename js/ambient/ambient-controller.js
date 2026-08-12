@@ -8,6 +8,15 @@
     'use strict';
 
     const STATES = { IDLE: 'idle', PLAYING: 'playing', PAUSED: 'paused' };
+    const FADE_MS = 350;
+
+    /** Per-mode base loudness (before user volume slider). */
+    const MODE_BASE_VOLUME = {
+        rain:  0.12,
+        calm:  0.10,
+        night: 0.08,
+        focus: 0.05,
+    };
 
     let _panel, _statusEl, _volumeEl, _navBtn, _modeBtns = [];
     let _initDone = false;
@@ -16,7 +25,7 @@
 
     let _status = STATES.IDLE;
     let _currentMode = null;
-    let _volume = 0.4;
+    let _volume = 0.55;
     let _needsGesture = false;
 
     // Single file audio element (for future asset URLs)
@@ -54,10 +63,29 @@
         return _audioCtx;
     }
 
-    function _applyVolume() {
-        const v = Math.max(0, Math.min(1, _volume));
-        if (_masterGain) _masterGain.gain.value = v;
+    function _modeVolume(modeId) {
+        const base = MODE_BASE_VOLUME[modeId] ?? 0.1;
+        return Math.max(0, Math.min(1, base * _volume));
+    }
+
+    function _applyVolume(modeId) {
+        const v = modeId ? _modeVolume(modeId) : Math.max(0, Math.min(1, _volume * 0.1));
+        if (_masterGain && _audioCtx) {
+            const now = _audioCtx.currentTime;
+            _masterGain.gain.cancelScheduledValues(now);
+            _masterGain.gain.setValueAtTime(v, now);
+        }
         if (_fileAudio) _fileAudio.volume = v;
+    }
+
+    async function _fadeMaster(to, durationMs = FADE_MS) {
+        if (!_masterGain || !_audioCtx) return;
+        const now = _audioCtx.currentTime;
+        const dur = durationMs / 1000;
+        _masterGain.gain.cancelScheduledValues(now);
+        _masterGain.gain.setValueAtTime(_masterGain.gain.value, now);
+        _masterGain.gain.linearRampToValueAtTime(to, now + dur);
+        await new Promise(r => setTimeout(r, durationMs));
     }
 
     function _stopProcedural() {
@@ -82,98 +110,151 @@
         _stopFile();
     }
 
-    function _noiseBuffer(ctx, seconds) {
+    function _noiseBuffer(ctx, seconds, kind = 'pink') {
         const rate = ctx.sampleRate;
         const buffer = ctx.createBuffer(1, rate * seconds, rate);
         const data = buffer.getChannelData(0);
+        let b0 = 0; let b1 = 0; let b2 = 0; let b3 = 0; let b4 = 0; let b5 = 0; let b6 = 0;
         let last = 0;
         for (let i = 0; i < data.length; i++) {
             const white = Math.random() * 2 - 1;
-            last = (last + 0.02 * white) / 1.02;
-            data[i] = last * 2.5;
+            if (kind === 'brown') {
+                last = (last + 0.02 * white) / 1.02;
+                data[i] = last * 1.8;
+            } else if (kind === 'pink') {
+                b0 = 0.99886 * b0 + white * 0.0555179;
+                b1 = 0.99332 * b1 + white * 0.0750759;
+                b2 = 0.96900 * b2 + white * 0.1538520;
+                b3 = 0.86650 * b3 + white * 0.3104856;
+                b4 = 0.55000 * b4 + white * 0.5329522;
+                b5 = -0.7616 * b5 - white * 0.0168980;
+                data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+                b6 = white * 0.115926;
+            } else {
+                data[i] = white * 0.35;
+            }
         }
         return buffer;
+    }
+
+    function _trackNode(node, gainWrapper) {
+        _activeNodes.push(node);
+        if (gainWrapper) _activeNodes.push(gainWrapper);
     }
 
     function _startProcedural(generator) {
         const ctx = _ensureContext();
         if (!ctx || !_masterGain) return false;
 
-        _stopProcedural();
-        _applyVolume();
+        _stopProcedural(true);
+        if (_currentMode) _applyVolume(_currentMode);
 
-        const connect = (node) => {
-            node.connect(_masterGain);
-            if (node.start) {
-                node.start(0);
-                _activeNodes.push(node);
-            }
+        const connectGain = (input, level) => {
+            const g = ctx.createGain();
+            g.gain.value = level;
+            input.connect(g);
+            g.connect(_masterGain);
+            return g;
         };
 
         if (generator === 'rain') {
             const src = ctx.createBufferSource();
-            src.buffer = _noiseBuffer(ctx, 3);
+            src.buffer = _noiseBuffer(ctx, 4, 'pink');
             src.loop = true;
-            const filter = ctx.createBiquadFilter();
-            filter.type = 'bandpass';
-            filter.frequency.value = 900;
-            filter.Q.value = 0.4;
-            src.connect(filter);
-            filter.connect(_masterGain);
+
+            const hp = ctx.createBiquadFilter();
+            hp.type = 'highpass';
+            hp.frequency.value = 600;
+
+            const bp = ctx.createBiquadFilter();
+            bp.type = 'bandpass';
+            bp.frequency.value = 2800;
+            bp.Q.value = 0.25;
+
+            src.connect(hp);
+            hp.connect(bp);
+            const g = connectGain(bp, 0.55);
             src.start(0);
-            _activeNodes.push(src, filter);
+            _trackNode(src, g);
+            _trackNode(hp, null);
+            _trackNode(bp, null);
             return true;
         }
 
         if (generator === 'night') {
-            const src = ctx.createBufferSource();
-            src.buffer = _noiseBuffer(ctx, 4);
-            src.loop = true;
-            const low = ctx.createBiquadFilter();
-            low.type = 'lowpass';
-            low.frequency.value = 400;
-            src.connect(low);
-            low.connect(_masterGain);
-            src.start(0);
-            _activeNodes.push(src, low);
+            const drone = ctx.createOscillator();
+            drone.type = 'sine';
+            drone.frequency.value = 52;
+            const dg = connectGain(drone, 0.035);
+            drone.start(0);
+            _trackNode(drone, dg);
 
-            const osc = ctx.createOscillator();
-            osc.type = 'sine';
-            osc.frequency.value = 55;
-            const og = ctx.createGain();
-            og.gain.value = 0.06;
-            osc.connect(og);
-            og.connect(_masterGain);
-            osc.start(0);
-            _activeNodes.push(osc, og);
+            const pad = ctx.createOscillator();
+            pad.type = 'triangle';
+            pad.frequency.value = 78;
+            const pg = connectGain(pad, 0.018);
+            pad.start(0);
+            _trackNode(pad, pg);
+
+            const tex = ctx.createBufferSource();
+            tex.buffer = _noiseBuffer(ctx, 6, 'brown');
+            tex.loop = true;
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass';
+            lp.frequency.value = 180;
+            tex.connect(lp);
+            const tg = connectGain(lp, 0.012);
+            tex.start(0);
+            _trackNode(tex, tg);
+            _trackNode(lp, null);
             return true;
         }
 
         if (generator === 'calm') {
-            [220, 329.63].forEach((freq, i) => {
+            let leadOsc = null;
+            [196, 293.66, 392].forEach((freq, i) => {
                 const osc = ctx.createOscillator();
                 osc.type = 'sine';
                 osc.frequency.value = freq;
-                const g = ctx.createGain();
-                g.gain.value = 0.025 + i * 0.005;
-                osc.connect(g);
-                g.connect(_masterGain);
+                const g = connectGain(osc, 0.022 + i * 0.004);
                 osc.start(0);
-                _activeNodes.push(osc, g);
+                _trackNode(osc, g);
+                if (!leadOsc) leadOsc = osc;
             });
+
+            if (leadOsc) {
+                const lfo = ctx.createOscillator();
+                lfo.type = 'sine';
+                lfo.frequency.value = 0.06;
+                const lfoG = ctx.createGain();
+                lfoG.gain.value = 6;
+                lfo.connect(lfoG);
+                lfoG.connect(leadOsc.frequency);
+                lfo.start(0);
+                _trackNode(lfo, lfoG);
+            }
             return true;
         }
 
         if (generator === 'focus') {
-            const src = ctx.createBufferSource();
-            src.buffer = _noiseBuffer(ctx, 2);
-            src.loop = true;
-            const g = ctx.createGain();
-            g.gain.value = 0.15;
-            src.connect(g);
-            g.connect(_masterGain);
-            src.start(0);
-            _activeNodes.push(src, g);
+            const tone = ctx.createOscillator();
+            tone.type = 'sine';
+            tone.frequency.value = 174;
+            const tg = connectGain(tone, 0.012);
+            tone.start(0);
+            _trackNode(tone, tg);
+
+            const bed = ctx.createBufferSource();
+            bed.buffer = _noiseBuffer(ctx, 3, 'brown');
+            bed.loop = true;
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass';
+            lp.frequency.value = 120;
+            bed.connect(lp);
+            const bg = connectGain(lp, 0.008);
+            bed.start(0);
+            _trackNode(bed, bg);
+            _trackNode(lp, null);
             return true;
         }
 
@@ -184,7 +265,7 @@
         const audio = _getFileAudio();
         _stopFile();
         audio.src = src;
-        _applyVolume();
+        _applyVolume(_currentMode);
         try {
             await audio.play();
             return true;
@@ -197,17 +278,28 @@
         const source = window.ambientProvider?.resolveSource(modeId);
         if (!source) return false;
 
+        const wasPlaying = _status === STATES.PLAYING;
+        if (wasPlaying && _masterGain) {
+            await _fadeMaster(0, FADE_MS);
+        }
+
         _stopAudio();
 
         let ok = false;
         if (source.type === 'file') {
             ok = await _startFile(source.src);
+            if (ok) _applyVolume(modeId);
         } else if (source.type === 'procedural') {
             const ctx = _ensureContext();
             if (ctx?.state === 'suspended') {
                 try { await ctx.resume(); } catch (e) { /* ignore */ }
             }
+            _currentMode = modeId;
+            if (_masterGain) _masterGain.gain.value = 0;
             ok = _startProcedural(source.generator);
+            if (ok) {
+                await _fadeMaster(_modeVolume(modeId), FADE_MS);
+            }
         }
 
         if (!ok) {
@@ -324,7 +416,7 @@
 
     function setVolume(value) {
         _volume = Math.max(0, Math.min(1, Number(value)));
-        _applyVolume();
+        _applyVolume(_currentMode);
         if (window.ambientStorage) {
             window.ambientStorage.savePrefs({ volume: _volume });
         }
@@ -463,7 +555,7 @@
             </div>
             <div class="ambient-volume-row">
                 <label for="ambientVolume">Volume</label>
-                <input type="range" id="ambientVolume" min="0" max="100" value="40" aria-label="Volume ambient">
+                <input type="range" id="ambientVolume" min="0" max="100" value="55" aria-label="Volume ambient">
             </div>
             <div class="ambient-status" id="ambientStatus" aria-live="polite"></div>
             <button type="button" class="ambient-stop-btn" id="ambientStopBtn">Stop Ambient</button>
@@ -528,10 +620,10 @@
     function _loadPrefs() {
         const prefs = window.ambientStorage?.getPrefs();
         if (!prefs) return;
-        _volume = prefs.volume ?? 0.4;
+        _volume = prefs.volume ?? 0.55;
         _currentMode = prefs.selectedAmbient;
         if (_volumeEl) _volumeEl.value = Math.round(_volume * 100);
-        _applyVolume();
+        if (_currentMode) _applyVolume(_currentMode);
     }
 
     function initAmbient() {

@@ -1,58 +1,56 @@
 // ==========================================================================
 // PERSONAL-WORKSPACE — MUSIC VISUALIZER (MUSIC-VISUALIZER.JS)
-// Web Audio API canvas visualizer — 5 modes, one AudioContext, one RAF loop.
+// Web Audio API canvas visualizer — one AudioContext, one RAF loop.
+// Local Music → real audio-reactive. Spotify → decorative idle (no extraction).
 // ==========================================================================
 
 (function () {
     'use strict';
 
-    // -------------------------------------------------------------------------
-    // CONSTANTS
-    // -------------------------------------------------------------------------
-    const MODES       = ['pulse', 'wave', 'bars', 'circle', 'particles'];
+    const MODES       = ['bars', 'pulse', 'wave', 'circle', 'particles'];
     const STORAGE_KEY = 'pw_visualizer_mode';
     const FFT_SIZE    = 1024;
 
-    // -------------------------------------------------------------------------
-    // STATE
-    // -------------------------------------------------------------------------
     let _audioCtx    = null;
     let _analyser    = null;
-    let _source      = null;        // MediaElementSourceNode (created once)
-    let _freqData    = null;        // Uint8Array — frequency
-    let _timeData    = null;        // Uint8Array — time domain
+    let _source      = null;
+    let _freqData    = null;
+    let _timeData    = null;
     let _canvas      = null;
     let _ctx         = null;
+    let _resizeObs   = null;
     let _rafId       = null;
-    let _mode        = localStorage.getItem(STORAGE_KEY) || 'pulse';
+    let _mode        = localStorage.getItem(STORAGE_KEY) || 'bars';
     let _playing     = false;
+    let _decorative  = false;
     let _particles   = [];
-    let _supported   = true;        // set false on fallback
+    let _supported   = true;
+    let _boundAudio  = null;
 
-    // -------------------------------------------------------------------------
-    // INIT AUDIO CONTEXT  (called once, on first play)
-    // -------------------------------------------------------------------------
     function _initAudio(audioEl) {
-        if (_audioCtx) return true;           // already initialised
+        if (!audioEl) return false;
 
         try {
-            _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            _analyser = _audioCtx.createAnalyser();
-            _analyser.fftSize = FFT_SIZE;
-            _analyser.smoothingTimeConstant = 0.82;
-
-            // Guard against "already has a MediaElementSource" error
-            if (audioEl._visualizerSourceAttached) {
-                console.warn('[Visualizer] MediaElementSource already attached.');
-                return true;
+            if (!_audioCtx) {
+                _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                _analyser = _audioCtx.createAnalyser();
+                _analyser.fftSize = FFT_SIZE;
+                _analyser.smoothingTimeConstant = 0.82;
+                _freqData = new Uint8Array(_analyser.frequencyBinCount);
+                _timeData = new Uint8Array(_analyser.frequencyBinCount);
             }
-            _source = _audioCtx.createMediaElementSource(audioEl);
-            _source.connect(_analyser);
-            _analyser.connect(_audioCtx.destination);
-            audioEl._visualizerSourceAttached = true;
 
-            _freqData = new Uint8Array(_analyser.frequencyBinCount);
-            _timeData = new Uint8Array(_analyser.frequencyBinCount);
+            if (_boundAudio !== audioEl) {
+                if (audioEl._visualizerSourceAttached) {
+                    console.warn('[Visualizer] MediaElementSource already attached on element.');
+                } else {
+                    _source = _audioCtx.createMediaElementSource(audioEl);
+                    _source.connect(_analyser);
+                    _analyser.connect(_audioCtx.destination);
+                    audioEl._visualizerSourceAttached = true;
+                }
+                _boundAudio = audioEl;
+            }
 
             return true;
         } catch (e) {
@@ -62,43 +60,52 @@
         }
     }
 
-    // -------------------------------------------------------------------------
-    // CANVAS — build inside #lmVisualizerContainer
-    // -------------------------------------------------------------------------
-    function _buildCanvas() {
+    function _ensureCanvas() {
         const container = document.getElementById('lmVisualizerContainer');
-        if (!container) return;
+        if (!container) return false;
 
-        if (_canvas) return;                  // already built
+        if (_canvas && !container.contains(_canvas)) {
+            _teardownCanvas();
+        }
 
-        _canvas = document.createElement('canvas');
-        _canvas.id = 'lmVisualizerCanvas';
-        _canvas.style.cssText = 'width:100%;height:100%;display:block;border-radius:inherit;';
-        container.appendChild(_canvas);
-        _ctx = _canvas.getContext('2d');
+        if (!_canvas) {
+            _canvas = document.createElement('canvas');
+            _canvas.id = 'lmVisualizerCanvas';
+            _canvas.style.cssText = 'width:100%;height:100%;display:block;border-radius:inherit;';
+            container.appendChild(_canvas);
+            _ctx = _canvas.getContext('2d');
 
-        // Resize observer keeps pixel-perfect resolution
-        const ro = new ResizeObserver(() => _resizeCanvas());
-        ro.observe(container);
+            _resizeObs = new ResizeObserver(() => _resizeCanvas());
+            _resizeObs.observe(container);
+        }
+
         _resizeCanvas();
+        return !!_ctx;
+    }
+
+    function _teardownCanvas() {
+        if (_resizeObs) {
+            _resizeObs.disconnect();
+            _resizeObs = null;
+        }
+        _canvas = null;
+        _ctx = null;
     }
 
     function _resizeCanvas() {
-        if (!_canvas) return;
+        if (!_canvas || !_ctx) return;
         const pr = window.devicePixelRatio || 1;
         const w  = _canvas.offsetWidth;
         const h  = _canvas.offsetHeight;
+        if (w <= 0 || h <= 0) return;
         _canvas.width  = w * pr;
         _canvas.height = h * pr;
-        _ctx.setTransform(pr, 0, 0, pr, 0, 0); // idempotent — safe to call many times
+        _ctx.setTransform(pr, 0, 0, pr, 0, 0);
     }
 
-    // -------------------------------------------------------------------------
-    // PARTICLES helper
-    // -------------------------------------------------------------------------
     function _spawnParticles(count) {
-        const w = _canvas.offsetWidth;
-        const h = _canvas.offsetHeight;
+        const w = _canvas.offsetWidth || 1;
+        const h = _canvas.offsetHeight || 1;
         for (let i = 0; i < count; i++) {
             _particles.push({
                 x:    Math.random() * w,
@@ -107,23 +114,34 @@
                 vy:   (Math.random() - 0.5) * 1.5,
                 r:    Math.random() * 3 + 1,
                 life: Math.random(),
-                hue:  Math.random() * 60 + 200     // blue-purple range
+                hue:  Math.random() * 60 + 200,
             });
         }
     }
 
-    // -------------------------------------------------------------------------
-    // DRAW HELPERS — each reads from _freqData / _timeData
-    // -------------------------------------------------------------------------
-
     function _accentColor() {
-        const style = getComputedStyle(document.documentElement);
-        return style.getPropertyValue('--accent-primary').trim() || '#2563eb';
+        return getComputedStyle(document.documentElement)
+            .getPropertyValue('--accent-primary').trim() || '#2563eb';
     }
 
     function _bgColor() {
-        const style = getComputedStyle(document.documentElement);
-        return style.getPropertyValue('--bg-card').trim() || '#ffffff';
+        return getComputedStyle(document.documentElement)
+            .getPropertyValue('--bg-card').trim() || '#ffffff';
+    }
+
+    function _decorativeEnergy(t) {
+        return 0.22 + Math.sin(t * 0.002) * 0.08 + Math.sin(t * 0.005) * 0.05;
+    }
+
+    function _fillFakeFreqData(t) {
+        const energy = _decorativeEnergy(t);
+        for (let i = 0; i < _freqData.length; i++) {
+            const falloff = 1 - (i / _freqData.length);
+            _freqData[i] = Math.floor(energy * falloff * 180 + Math.random() * 12);
+        }
+        for (let i = 0; i < _timeData.length; i++) {
+            _timeData[i] = 128 + Math.sin(i * 0.08 + t * 0.004) * 18 * energy;
+        }
     }
 
     function _drawPulse() {
@@ -136,13 +154,12 @@
         avg /= _freqData.length;
 
         const r = (avg / 255) * (h * 0.38) + h * 0.06;
-
         const cx = w / 2;
         const cy = h / 2;
+        const accent = _accentColor();
 
-        // Outer glow ring
         const grad = _ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.4);
-        grad.addColorStop(0,   'rgba(37,99,235,0.55)');
+        grad.addColorStop(0,   `${accent}8c`);
         grad.addColorStop(0.6, 'rgba(124,58,237,0.25)');
         grad.addColorStop(1,   'rgba(124,58,237,0)');
         _ctx.beginPath();
@@ -150,10 +167,9 @@
         _ctx.fillStyle = grad;
         _ctx.fill();
 
-        // Core circle
         _ctx.beginPath();
         _ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        _ctx.fillStyle = 'rgba(37,99,235,0.75)';
+        _ctx.fillStyle = `${accent}bf`;
         _ctx.fill();
     }
 
@@ -161,13 +177,14 @@
         const w = _canvas.offsetWidth;
         const h = _canvas.offsetHeight;
         _ctx.clearRect(0, 0, w, h);
-        _analyser.getByteTimeDomainData(_timeData);
+        if (_analyser && !_decorative) _analyser.getByteTimeDomainData(_timeData);
 
         const sliceW = w / _timeData.length;
+        const accent = _accentColor();
         _ctx.lineWidth = 2;
-        _ctx.strokeStyle = _accentColor();
-        _ctx.shadowColor = _accentColor();
-        _ctx.shadowBlur  = 8;
+        _ctx.strokeStyle = accent;
+        _ctx.shadowColor = accent;
+        _ctx.shadowBlur  = 10;
 
         _ctx.beginPath();
         for (let i = 0; i < _timeData.length; i++) {
@@ -185,23 +202,40 @@
         const h = _canvas.offsetHeight;
         _ctx.clearRect(0, 0, w, h);
 
-        const binCount = Math.floor(_freqData.length * 0.6);
-        const barW     = (w / binCount) - 1;
+        const binCount = Math.floor(_freqData.length * 0.55);
+        const barW     = Math.max(1, (w / binCount) - 1.5);
+        const accent = _accentColor();
 
         for (let i = 0; i < binCount; i++) {
-            const val    = _freqData[i];
-            const barH   = (val / 255) * h * 0.92;
-            const x      = i * (barW + 1);
-            const hue    = (i / binCount) * 200 + 200; // blue to purple
-            const alpha  = 0.5 + (val / 255) * 0.5;
+            const val  = _freqData[i];
+            const barH = (val / 255) * h * 0.88;
+            const x    = i * (barW + 1.5);
+            const hue  = (i / binCount) * 200 + 200;
+            const alpha = 0.45 + (val / 255) * 0.55;
 
             _ctx.fillStyle = `hsla(${hue}, 80%, 58%, ${alpha})`;
             _ctx.fillRect(x, h - barH, barW, barH);
 
-            // top cap
             _ctx.fillStyle = `hsla(${hue}, 90%, 80%, 0.9)`;
             _ctx.fillRect(x, h - barH - 2, barW, 2);
         }
+
+        // Subtle waveform glow overlay
+        if (_analyser && !_decorative) _analyser.getByteTimeDomainData(_timeData);
+        const sliceW = w / _timeData.length;
+        _ctx.lineWidth = 1.5;
+        _ctx.strokeStyle = `${accent}66`;
+        _ctx.shadowColor = accent;
+        _ctx.shadowBlur = 6;
+        _ctx.beginPath();
+        for (let i = 0; i < _timeData.length; i += 4) {
+            const v = _timeData[i] / 128.0;
+            const y = h * 0.5 + (v - 1) * h * 0.18;
+            if (i === 0) _ctx.moveTo(0, y);
+            else         _ctx.lineTo(i * sliceW, y);
+        }
+        _ctx.stroke();
+        _ctx.shadowBlur = 0;
     }
 
     function _drawCircle() {
@@ -209,11 +243,11 @@
         const h  = _canvas.offsetHeight;
         _ctx.clearRect(0, 0, w, h);
 
-        const cx    = w / 2;
-        const cy    = h / 2;
-        const r0    = Math.min(w, h) * 0.20;
-        const bins  = Math.floor(_freqData.length * 0.5);
-        const step  = (Math.PI * 2) / bins;
+        const cx   = w / 2;
+        const cy   = h / 2;
+        const r0   = Math.min(w, h) * 0.20;
+        const bins = Math.floor(_freqData.length * 0.5);
+        const step = (Math.PI * 2) / bins;
 
         for (let i = 0; i < bins; i++) {
             const val   = _freqData[i];
@@ -233,10 +267,9 @@
             _ctx.stroke();
         }
 
-        // core circle
         _ctx.beginPath();
         _ctx.arc(cx, cy, r0 - 2, 0, Math.PI * 2);
-        _ctx.strokeStyle = 'rgba(37,99,235,0.35)';
+        _ctx.strokeStyle = `${_accentColor()}59`;
         _ctx.lineWidth = 1.5;
         _ctx.stroke();
     }
@@ -245,7 +278,6 @@
         const w = _canvas.offsetWidth;
         const h = _canvas.offsetHeight;
 
-        // Semi-transparent trail — theme-safe
         _ctx.save();
         _ctx.globalAlpha = 0.18;
         _ctx.fillStyle   = _bgColor();
@@ -257,7 +289,6 @@
         avg /= _freqData.length;
         const energy = avg / 255;
 
-        // Spawn new particles on beat
         if (energy > 0.45 && _particles.length < 150) {
             _spawnParticles(Math.floor(energy * 4));
         }
@@ -277,20 +308,28 @@
         _ctx.globalAlpha = 1;
     }
 
-    // -------------------------------------------------------------------------
-    // ANIMATION LOOP
-    // -------------------------------------------------------------------------
     function _loop() {
-        if (!_playing || !_analyser || !_ctx) return;
+        if (!_playing || !_ctx || !_canvas) return;
 
-        _analyser.getByteFrequencyData(_freqData);
+        const w = _canvas.offsetWidth;
+        const h = _canvas.offsetHeight;
+        if (w <= 0 || h <= 0) {
+            _rafId = requestAnimationFrame(_loop);
+            return;
+        }
+
+        if (_decorative || !_analyser) {
+            _fillFakeFreqData(performance.now());
+        } else {
+            _analyser.getByteFrequencyData(_freqData);
+        }
 
         switch (_mode) {
-            case 'wave':     _drawWave();     break;
-            case 'bars':     _drawBars();     break;
-            case 'circle':   _drawCircle();   break;
+            case 'wave':      _drawWave();      break;
+            case 'pulse':     _drawPulse();     break;
+            case 'circle':    _drawCircle();    break;
             case 'particles': _drawParticles(); break;
-            default:         _drawPulse();
+            default:          _drawBars();
         }
 
         _rafId = requestAnimationFrame(_loop);
@@ -300,27 +339,44 @@
         if (!_ctx || !_canvas) return;
         const w = _canvas.offsetWidth;
         const h = _canvas.offsetHeight;
-        _ctx.clearRect(0, 0, w, h);
+        if (w > 0 && h > 0) _ctx.clearRect(0, 0, w, h);
     }
 
-    // -------------------------------------------------------------------------
-    // PUBLIC API
-    // -------------------------------------------------------------------------
-    window.musicVisualizer = {
+    async function _resumeContext() {
+        if (_audioCtx?.state === 'suspended') {
+            try { await _audioCtx.resume(); } catch (e) { /* ignore */ }
+        }
+    }
 
-        /** Called once from LocalPlayer when audio starts */
+    window.musicVisualizer = {
         init(audioEl) {
-            if (!_supported) return;
-            _buildCanvas();
-            return _initAudio(audioEl);
+            if (!_supported) return false;
+            _decorative = !audioEl;
+            if (!_ensureCanvas()) return false;
+            if (audioEl) return _initAudio(audioEl);
+            if (!_freqData) _freqData = new Uint8Array(128);
+            if (!_timeData) _timeData = new Uint8Array(128);
+            return true;
         },
 
-        start() {
-            if (!_supported || !_analyser) return;
-            // Resume AudioContext (browser autoplay policy)
-            if (_audioCtx && _audioCtx.state === 'suspended') {
-                _audioCtx.resume();
+        rebind() {
+            _teardownCanvas();
+            return _ensureCanvas();
+        },
+
+        async start(options = {}) {
+            if (!_supported) return;
+            _decorative = !!options.decorative;
+            if (!_ensureCanvas()) return;
+
+            if (!_decorative) {
+                if (!_analyser) return;
+                await _resumeContext();
+            } else if (!_freqData) {
+                _freqData = new Uint8Array(128);
+                _timeData = new Uint8Array(128);
             }
+
             _playing = true;
             if (!_rafId) _loop();
         },
@@ -332,6 +388,7 @@
 
         stop() {
             _playing = false;
+            _decorative = false;
             if (_rafId) { cancelAnimationFrame(_rafId); _rafId = null; }
             _particles = [];
             _clearCanvas();
@@ -342,20 +399,20 @@
             _mode = mode;
             _particles = [];
             localStorage.setItem(STORAGE_KEY, mode);
-            // Update UI buttons
             document.querySelectorAll('[data-vis-mode]').forEach(btn => {
                 btn.classList.toggle('vis-btn-active', btn.dataset.visMode === mode);
             });
         },
 
         getMode() { return _mode; },
-
-        isSupported() { return _supported; }
+        isSupported() { return _supported; },
+        isDecorative() { return _decorative; },
     };
 
-    // Build visualizer UI once DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-        _buildCanvas();
+    window.addEventListener('pw:page-ready', () => {
+        if (document.getElementById('lmVisualizerContainer')) {
+            window.musicVisualizer.rebind();
+            if (_playing) window.musicVisualizer.start({ decorative: _decorative });
+        }
     });
-
 })();

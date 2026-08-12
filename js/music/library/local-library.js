@@ -14,7 +14,13 @@ class LocalLibrary {
         this.container = document.getElementById('localMusicContainer');
         if (!this.container) return;
 
-        this.buildUI();
+        const alreadyBuilt = !!this.container.querySelector('#lmTrackList');
+        if (!alreadyBuilt) {
+            this.buildUI();
+        } else {
+            this._updateSecurityUI();
+            if (window.musicVisualizer?.rebind) window.musicVisualizer.rebind();
+        }
         await this.loadTracks();
         this._bindSecurityEvents();
     }
@@ -71,9 +77,9 @@ class LocalLibrary {
                 <div class="lm-visualizer-wrapper" id="lmVisualizerWrapper" style="display:none;">
                     <div class="lm-visualizer-canvas-container" id="lmVisualizerContainer"></div>
                     <div class="lm-visualizer-controls" id="lmVisualizerControls">
-                        <button class="lm-vis-btn vis-btn-active" data-vis-mode="pulse" title="Pulse">◉ Pulse</button>
+                        <button class="lm-vis-btn vis-btn-active" data-vis-mode="bars" title="Bars">▊ Bars</button>
+                        <button class="lm-vis-btn" data-vis-mode="pulse" title="Pulse">◉ Pulse</button>
                         <button class="lm-vis-btn" data-vis-mode="wave" title="Wave">〰 Wave</button>
-                        <button class="lm-vis-btn" data-vis-mode="bars" title="Bars">▊ Bars</button>
                         <button class="lm-vis-btn" data-vis-mode="circle" title="Circle">◎ Circle</button>
                         <button class="lm-vis-btn" data-vis-mode="particles" title="Particles">✦ Particles</button>
                     </div>

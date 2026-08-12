@@ -111,6 +111,7 @@ class LocalPlayer {
         // Show visualizer
         const visWrapper = document.getElementById('lmVisualizerWrapper');
         if (visWrapper) visWrapper.style.display = 'block';
+        if (window.musicVisualizer?.rebind) window.musicVisualizer.rebind();
 
         this.updateMiniPlayerHeader();
     }
@@ -171,9 +172,9 @@ class LocalPlayer {
             this.updateMiniPlayerHeader();
             this.updatePlayButton();
 
-            // Start visualizer
+            // Start visualizer after play gesture (AudioContext resume)
             if (window.musicVisualizer) {
-                window.musicVisualizer.start();
+                await window.musicVisualizer.start();
             }
 
             // Dispatch event for gamification
