@@ -336,6 +336,7 @@ class SubjectPageManager {
         } else if (task.status === "Sedang Dikerjakan") {
             task.status = "Selesai";
             showToast("✓ Tugas ditandai selesai.");
+            window.dispatchEvent(new CustomEvent('task:completed', { detail: { taskId } }));
         } else {
             task.status = "Belum Dikerjakan";
             showToast("Status tugas diubah menjadi Belum Dikerjakan.");

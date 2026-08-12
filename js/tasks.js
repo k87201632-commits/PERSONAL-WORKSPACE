@@ -301,6 +301,7 @@ class TaskManager {
         } else {
             task.status = "Selesai";
             showToast("✓ Tugas ditandai selesai.");
+            window.dispatchEvent(new CustomEvent('task:completed', { detail: { taskId: id } }));
         }
 
         this.saveTasks();

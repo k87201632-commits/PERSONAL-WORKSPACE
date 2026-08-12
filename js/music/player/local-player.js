@@ -108,6 +108,10 @@ class LocalPlayer {
         if (this.controlsRow) this.controlsRow.style.display = 'flex';
         if (this.progressContainer) this.progressContainer.style.display = 'block';
 
+        // Show visualizer
+        const visWrapper = document.getElementById('lmVisualizerWrapper');
+        if (visWrapper) visWrapper.style.display = 'block';
+
         this.updateMiniPlayerHeader();
     }
 
@@ -120,6 +124,11 @@ class LocalPlayer {
 
         if (this.controlsRow) this.controlsRow.style.display = 'none';
         if (this.progressContainer) this.progressContainer.style.display = 'none';
+
+        // Hide & pause visualizer when switching to Spotify
+        const visWrapper = document.getElementById('lmVisualizerWrapper');
+        if (visWrapper) visWrapper.style.display = 'none';
+        if (window.musicVisualizer) window.musicVisualizer.stop();
 
         // Restore Spotify Title if it exists
         if (window.spotifyCurrentPlayingId) {
@@ -152,17 +161,29 @@ class LocalPlayer {
         this.audio.src = this.currentObjectUrl;
         
         try {
+            // Init visualizer (safe — only creates AudioContext once)
+            if (window.musicVisualizer) {
+                window.musicVisualizer.init(this.audio);
+            }
+
             await this.audio.play();
             this.isPlaying = true;
             this.updateMiniPlayerHeader();
             this.updatePlayButton();
+
+            // Start visualizer
+            if (window.musicVisualizer) {
+                window.musicVisualizer.start();
+            }
+
+            // Dispatch event for gamification
+            window.dispatchEvent(new CustomEvent('music:played', { detail: { track } }));
             
             if (window.lyricsManager) {
                 window.lyricsManager.loadLyricsForTrack(track.id);
             }
         } catch (err) {
             console.error("Local play error:", err);
-            // Show toast or error
         }
     }
 
@@ -172,15 +193,20 @@ class LocalPlayer {
         if (this.isPlaying) {
             this.audio.pause();
             this.isPlaying = false;
+            if (window.musicVisualizer) window.musicVisualizer.pause();
         } else {
             this.audio.play();
             this.isPlaying = true;
+            if (window.musicVisualizer) window.musicVisualizer.start();
         }
         this.updatePlayButton();
     }
 
     playNext() {
-        if (this.queue.length === 0) return;
+        if (this.queue.length === 0) {
+            this._stopPlayback();
+            return;
+        }
 
         let currentIndex = this.queue.findIndex(t => t.id === this.currentTrack?.id);
         let nextIndex = currentIndex + 1;
@@ -189,11 +215,18 @@ class LocalPlayer {
             if (this.repeatMode === 'all') {
                 nextIndex = 0;
             } else {
-                return; // Stop
+                this._stopPlayback();
+                return;
             }
         }
 
         this.playTrack(this.queue[nextIndex], this.queue);
+    }
+
+    _stopPlayback() {
+        this.isPlaying = false;
+        this.updatePlayButton();
+        if (window.musicVisualizer) window.musicVisualizer.stop();
     }
 
     playPrevious() {
@@ -226,17 +259,17 @@ class LocalPlayer {
     }
 
     onEnded() {
-        this.isPlaying = false;
-        this.updatePlayButton();
-        
         if (this.repeatMode === 'one') {
             this.audio.currentTime = 0;
             this.audio.play();
             this.isPlaying = true;
             this.updatePlayButton();
-        } else {
-            this.playNext();
+            return;
         }
+
+        this.isPlaying = false;
+        this.updatePlayButton();
+        this.playNext();
     }
 
     onError(e) {
