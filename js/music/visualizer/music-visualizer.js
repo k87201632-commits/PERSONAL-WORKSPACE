@@ -41,13 +41,13 @@
             }
 
             if (_boundAudio !== audioEl) {
-                if (audioEl._visualizerSourceAttached) {
-                    console.warn('[Visualizer] MediaElementSource already attached on element.');
-                } else {
+                if (!audioEl._visualizerSourceAttached) {
                     _source = _audioCtx.createMediaElementSource(audioEl);
                     _source.connect(_analyser);
                     _analyser.connect(_audioCtx.destination);
                     audioEl._visualizerSourceAttached = true;
+                } else if (!_source) {
+                    console.warn('[Visualizer] Audio element already routed; reusing existing analyser.');
                 }
                 _boundAudio = audioEl;
             }
@@ -81,6 +81,20 @@
 
         _resizeCanvas();
         return !!_ctx;
+    }
+
+    function _resizeWhenVisible() {
+        if (!_canvas) return;
+        if (_canvas.offsetWidth > 0 && _canvas.offsetHeight > 0) {
+            _resizeCanvas();
+            return;
+        }
+        requestAnimationFrame(() => {
+            _resizeCanvas();
+            if (_canvas && (_canvas.offsetWidth <= 0 || _canvas.offsetHeight <= 0)) {
+                requestAnimationFrame(_resizeCanvas);
+            }
+        });
     }
 
     function _teardownCanvas() {
@@ -361,13 +375,16 @@
 
         rebind() {
             _teardownCanvas();
-            return _ensureCanvas();
+            const ok = _ensureCanvas();
+            _resizeWhenVisible();
+            return ok;
         },
 
         async start(options = {}) {
             if (!_supported) return;
             _decorative = !!options.decorative;
             if (!_ensureCanvas()) return;
+            _resizeWhenVisible();
 
             if (!_decorative) {
                 if (!_analyser) return;

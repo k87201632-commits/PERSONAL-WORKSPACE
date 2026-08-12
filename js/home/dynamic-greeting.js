@@ -115,8 +115,12 @@
             (_path, file) => file === 'index.html' || file === '',
             initDynamicGreeting
         );
-        window.pwLifecycle.runWhenReady(initDynamicGreeting);
     } else {
-        document.addEventListener('DOMContentLoaded', initDynamicGreeting);
+        document.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname;
+            if (path.includes('index.html') || path.endsWith('/') || !path.split('/').filter(Boolean).length) {
+                initDynamicGreeting();
+            }
+        });
     }
 })();

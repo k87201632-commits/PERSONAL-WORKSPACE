@@ -45,6 +45,7 @@ function _needsFullReload(resolvedHref) {
     if (lower.includes('arcade.html')) return true;
     if (lower.includes('/subjects/') && typeof SubjectPageManager === 'undefined') return true;
     if (lower.includes('tugas.html') && typeof window.pwInitTugasPage !== 'function') return true;
+    if ((lower.includes('index.html') || lower.endsWith('/')) && typeof window.localPlayer === 'undefined') return true;
     if ((lower.includes('index.html') || lower.endsWith('/')) && typeof window.pwInitHomePage !== 'function') return true;
     if (lower.includes('pelajaran.html') && typeof initSubjectPage === 'undefined') return true;
     if (lower.includes('stats.html') && typeof window.pwInitStatsPage !== 'function') return true;

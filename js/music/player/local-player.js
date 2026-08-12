@@ -146,6 +146,12 @@ class LocalPlayer {
     }
 
     async playTrack(track, queueList = []) {
+        if (window.musicController && window.musicController.getMode() !== 'local') {
+            window.musicController.setMode('local');
+        } else if (typeof this.onModeActive === 'function') {
+            this.onModeActive();
+        }
+
         this.currentTrack = track;
         
         // Build queue
