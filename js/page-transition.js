@@ -47,6 +47,7 @@ function _needsFullReload(resolvedHref) {
     if (lower.includes('tugas.html') && typeof window.pwInitTugasPage !== 'function') return true;
     if ((lower.includes('index.html') || lower.endsWith('/')) && typeof window.pwInitHomePage !== 'function') return true;
     if (lower.includes('pelajaran.html') && typeof initSubjectPage === 'undefined') return true;
+    if (lower.includes('stats.html') && typeof window.pwInitStatsPage !== 'function') return true;
     return false;
 }
 
