@@ -19,7 +19,6 @@ class LocalLibrary {
             this.buildUI();
         } else {
             this._updateSecurityUI();
-            if (window.musicVisualizer?.rebind) window.musicVisualizer.rebind();
         }
         await this.loadTracks();
         this._bindSecurityEvents();
@@ -73,18 +72,6 @@ class LocalLibrary {
                     </div>
                 </div>
 
-                <!-- Visualizer -->
-                <div class="lm-visualizer-wrapper" id="lmVisualizerWrapper" style="display:none;">
-                    <div class="lm-visualizer-canvas-container" id="lmVisualizerContainer"></div>
-                    <div class="lm-visualizer-controls" id="lmVisualizerControls">
-                        <button class="lm-vis-btn vis-btn-active" data-vis-mode="bars" title="Bars">▊ Bars</button>
-                        <button class="lm-vis-btn" data-vis-mode="pulse" title="Pulse">◉ Pulse</button>
-                        <button class="lm-vis-btn" data-vis-mode="wave" title="Wave">〰 Wave</button>
-                        <button class="lm-vis-btn" data-vis-mode="circle" title="Circle">◎ Circle</button>
-                        <button class="lm-vis-btn" data-vis-mode="particles" title="Particles">✦ Particles</button>
-                    </div>
-                </div>
-
                 <!-- Lyrics panel -->
                 <div class="lm-lyrics-panel" id="lmLyricsPanel" style="display: none;">
                     <div class="lm-lyrics-placeholder">Lirik akan muncul di sini jika ada file .lrc</div>
@@ -98,7 +85,6 @@ class LocalLibrary {
 
         this.bindEvents();
         this._updateSecurityUI();
-        this._bindVisualizerControls();
     }
 
     // -----------------------------------------------------------------------
@@ -136,25 +122,6 @@ class LocalLibrary {
         });
         document.addEventListener('musicLibraryLocked', () => {
             this._updateSecurityUI();
-        });
-    }
-
-    // -----------------------------------------------------------------------
-    // BIND VISUALIZER CONTROLS
-    // -----------------------------------------------------------------------
-    _bindVisualizerControls() {
-        document.querySelectorAll('[data-vis-mode]').forEach(btn => {
-            btn.addEventListener('click', () => {
-                if (window.musicVisualizer) {
-                    window.musicVisualizer.setMode(btn.dataset.visMode);
-                }
-            });
-        });
-
-        // Restore saved mode highlight
-        const savedMode = localStorage.getItem('pw_visualizer_mode') || 'pulse';
-        document.querySelectorAll('[data-vis-mode]').forEach(btn => {
-            btn.classList.toggle('vis-btn-active', btn.dataset.visMode === savedMode);
         });
     }
 

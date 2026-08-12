@@ -21,7 +21,6 @@
         { id: 'page-home',    title: 'Home',              icon: '🏠', href: 'index.html', keywords: ['beranda', 'home', 'utama'] },
         { id: 'page-jadwal',  title: 'Jadwal',            icon: '📅', href: 'jadwal.html', keywords: ['jadwal', 'schedule', 'kelas'] },
         { id: 'page-tugas',   title: 'Tugas',             icon: '📝', href: 'tugas.html', keywords: ['tugas', 'tasks', 'task'] },
-        { id: 'page-stats',   title: 'Statistics',        icon: '📊', href: 'stats.html', keywords: ['stats', 'statistik', 'analytics', 'data'] },
         { id: 'page-profil',  title: 'Profil',            icon: '👤', href: 'profil.html', keywords: ['profil', 'profile'] },
         { id: 'page-arcade',  title: 'Arcade',            icon: '🎮', href: 'arcade.html', keywords: ['arcade', 'game', 'games'] },
         { id: 'page-music',   title: 'Music Library',     icon: '🎵', href: 'index.html', scroll: '#musicSystemSection', keywords: ['music', 'musik', 'lagu', 'library'] },

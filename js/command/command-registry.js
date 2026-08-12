@@ -116,15 +116,6 @@
 
             // --- WORKSPACE ---
             {
-                id: 'nav-stats',
-                label: 'Statistics',
-                description: 'Lihat statistik personal',
-                icon: '📊',
-                keywords: ['stats', 'statistik', 'analytics', 'data'],
-                group: 'Navigation',
-                action: () => _nav('stats.html'),
-            },
-            {
                 id: 'workspace-on-this-day',
                 label: 'On This Day',
                 description: 'Lihat throwback hari ini',

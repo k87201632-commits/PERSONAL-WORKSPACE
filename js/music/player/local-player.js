@@ -22,21 +22,16 @@ class LocalPlayer {
         this.audio.addEventListener('ended', () => this.onEnded());
         this.audio.addEventListener('error', (e) => this.onError(e));
         
-        // Bind to global player controls when local mode is active
-        // But since we share the mini player, we'll inject/hijack its buttons
         this.setupMiniPlayerHijack();
     }
 
     setupMiniPlayerHijack() {
-        // We will create our own control row inside the mini player that is only visible in Local mode
         const miniQueue = document.getElementById('slMiniQueue');
         if (!miniQueue) {
-            // Wait for it
             setTimeout(() => this.setupMiniPlayerHijack(), 500);
             return;
         }
 
-        // Add Progress Bar
         const header = document.querySelector('.sl-player-header');
         if (header) {
             this.progressContainer = document.createElement('div');
@@ -59,7 +54,6 @@ class LocalPlayer {
             });
         }
 
-        // Add Controls
         this.controlsRow = document.createElement('div');
         this.controlsRow.className = 'lm-controls-row';
         this.controlsRow.id = 'lmControlsRow';
@@ -98,7 +92,6 @@ class LocalPlayer {
     }
 
     onModeActive() {
-        // Hide spotify iframe, show our controls
         const iframeWrapper = document.getElementById('slIframeWrapper');
         if (iframeWrapper) iframeWrapper.style.display = 'none';
 
@@ -107,11 +100,6 @@ class LocalPlayer {
 
         if (this.controlsRow) this.controlsRow.style.display = 'flex';
         if (this.progressContainer) this.progressContainer.style.display = 'block';
-
-        // Show visualizer
-        const visWrapper = document.getElementById('lmVisualizerWrapper');
-        if (visWrapper) visWrapper.style.display = 'block';
-        if (window.musicVisualizer?.rebind) window.musicVisualizer.rebind();
 
         this.updateMiniPlayerHeader();
     }
@@ -126,12 +114,6 @@ class LocalPlayer {
         if (this.controlsRow) this.controlsRow.style.display = 'none';
         if (this.progressContainer) this.progressContainer.style.display = 'none';
 
-        // Hide & pause visualizer when switching to Spotify
-        const visWrapper = document.getElementById('lmVisualizerWrapper');
-        if (visWrapper) visWrapper.style.display = 'none';
-        if (window.musicVisualizer) window.musicVisualizer.stop();
-
-        // Restore Spotify Title if it exists
         if (window.spotifyCurrentPlayingId) {
             const lib = typeof spotifyLibraryGet === 'function' ? spotifyLibraryGet() : [];
             const item = lib.find(i => i.id === window.spotifyCurrentPlayingId);
@@ -154,12 +136,10 @@ class LocalPlayer {
 
         this.currentTrack = track;
         
-        // Build queue
         if (queueList.length > 0) {
             this.queue = queueList;
         }
 
-        // Create object URL from Blob
         if (this.currentObjectUrl) {
             URL.revokeObjectURL(this.currentObjectUrl);
         }
@@ -168,22 +148,11 @@ class LocalPlayer {
         this.audio.src = this.currentObjectUrl;
         
         try {
-            // Init visualizer (safe — only creates AudioContext once)
-            if (window.musicVisualizer) {
-                window.musicVisualizer.init(this.audio);
-            }
-
             await this.audio.play();
             this.isPlaying = true;
             this.updateMiniPlayerHeader();
             this.updatePlayButton();
 
-            // Start visualizer after play gesture (AudioContext resume)
-            if (window.musicVisualizer) {
-                await window.musicVisualizer.start();
-            }
-
-            // Dispatch event for gamification
             window.dispatchEvent(new CustomEvent('music:played', { detail: { track } }));
             
             if (window.lyricsManager) {
@@ -200,11 +169,9 @@ class LocalPlayer {
         if (this.isPlaying) {
             this.audio.pause();
             this.isPlaying = false;
-            if (window.musicVisualizer) window.musicVisualizer.pause();
         } else {
             this.audio.play();
             this.isPlaying = true;
-            if (window.musicVisualizer) window.musicVisualizer.start();
         }
         this.updatePlayButton();
     }
@@ -233,7 +200,6 @@ class LocalPlayer {
     _stopPlayback() {
         this.isPlaying = false;
         this.updatePlayButton();
-        if (window.musicVisualizer) window.musicVisualizer.stop();
     }
 
     playPrevious() {
@@ -248,7 +214,7 @@ class LocalPlayer {
         let prevIndex = currentIndex - 1;
 
         if (prevIndex < 0) {
-            prevIndex = this.queue.length - 1; // loop to back
+            prevIndex = this.queue.length - 1;
         }
 
         this.playTrack(this.queue[prevIndex], this.queue);
