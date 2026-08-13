@@ -38,13 +38,20 @@
         { id: 'flappy',      title: 'Flappy Mini',   icon: '🪽', keywords: ['flappy', 'fly'] },
     ];
 
+    function _resolveHref(href) {
+        return window.pwLifecycle?.resolveSiteUrl?.(href)
+            || window.pwUrl?.resolveSiteUrl?.(href)
+            || href;
+    }
+
     function _nav(href, scrollSelector) {
+        const target = _resolveHref(href);
         if (window.pwNavigate?.go) {
-            window.pwNavigate.go(href, scrollSelector);
-        } else if (typeof navigateToPage === 'function' && !href.includes('arcade.html')) {
-            navigateToPage(href, null);
+            window.pwNavigate.go(target, scrollSelector);
+        } else if (typeof navigateToPage === 'function' && !target.includes('arcade.html')) {
+            navigateToPage(target, null);
         } else {
-            window.location.href = href;
+            window.location.href = target;
         }
     }
 
@@ -119,12 +126,7 @@
                     keywords: [sub.id, sub.description || ''],
                     action: () => {
                         _closeSearch();
-                        const href = `subjects/${sub.file}`;
-                        if (typeof navigateToPage === 'function') {
-                            navigateToPage(href, null);
-                        } else {
-                            window.location.href = href;
-                        }
+                        _nav(`subjects/${sub.file}`);
                     },
                 }));
             });

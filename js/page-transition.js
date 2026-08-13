@@ -32,9 +32,16 @@ function initPageTransitions() {
     });
 }
 
+function _resolveSiteHref(href) {
+    if (window.pwLifecycle?.resolveSiteUrl) return window.pwLifecycle.resolveSiteUrl(href);
+    if (window.pwUrl?.resolveSiteUrl) return window.pwUrl.resolveSiteUrl(href);
+    return href;
+}
+
 function _resolveHref(href) {
     try {
-        return new URL(href, window.location.href).pathname + (new URL(href, window.location.href).search || '');
+        const resolved = _resolveSiteHref(href);
+        return new URL(resolved, window.location.href).pathname + (new URL(resolved, window.location.href).search || '');
     } catch (e) {
         return href;
     }
@@ -81,17 +88,17 @@ function _updateActiveNav(link) {
 }
 
 function loadPageContent(href, link, pushState = true) {
+    const fetchUrl = _resolveSiteHref(href);
     const resolved = _resolveHref(href);
-    const fetchUrl = href; // keep relative for fetch from current directory
 
     if (_needsFullReload(resolved)) {
-        window.location.href = href;
+        window.location.href = fetchUrl;
         return;
     }
 
     const mainContent = document.querySelector('.main-content');
     if (!mainContent) {
-        window.location.href = href;
+        window.location.href = fetchUrl;
         return;
     }
 
@@ -128,7 +135,7 @@ function loadPageContent(href, link, pushState = true) {
         })
         .catch(err => {
             console.error('Navigasi SPA gagal, fallback reload:', err);
-            window.location.href = href;
+            window.location.href = fetchUrl;
         });
 }
 

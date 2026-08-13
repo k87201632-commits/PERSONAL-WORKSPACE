@@ -45,6 +45,31 @@
         return parts.length ? parts[parts.length - 1] : 'index.html';
     }
 
+    /** Resolve site-local .html href from current page depth (subjects/* → ../). */
+    function resolveSiteUrl(href) {
+        if (!href || /^(https?:|mailto:|tel:|javascript:|#)/i.test(href)) return href;
+
+        const hashIdx = href.indexOf('#');
+        const hash = hashIdx >= 0 ? href.slice(hashIdx) : '';
+        const beforeHash = hashIdx >= 0 ? href.slice(0, hashIdx) : href;
+
+        const queryIdx = beforeHash.indexOf('?');
+        const query = queryIdx >= 0 ? beforeHash.slice(queryIdx) : '';
+        const pathPart = queryIdx >= 0 ? beforeHash.slice(0, queryIdx) : beforeHash;
+
+        if (!pathPart.endsWith('.html') && !pathPart.includes('.html#')) return href;
+        if (pathPart.startsWith('/') || pathPart.startsWith('../')) {
+            return pathPart + query + hash;
+        }
+
+        const inSubjects = window.location.pathname.replace(/\\/g, '/').includes('/subjects/');
+        if (inSubjects) {
+            return '../' + pathPart + query + hash;
+        }
+
+        return pathPart + query + hash;
+    }
+
     /**
      * Run matching page inits after navigation or first load.
      * @param {string} [href] — optional href from SPA navigation
@@ -77,7 +102,10 @@
         registerPageInit,
         runPageInit,
         filenameFromPath: _filenameFromPath,
+        resolveSiteUrl,
     };
+
+    window.pwUrl = { resolveSiteUrl };
 
     runWhenReady(bootstrap);
 })();

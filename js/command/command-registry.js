@@ -11,8 +11,13 @@
             window.commandPalette.close();
         }
 
-        const isArcade = href.includes('arcade.html');
-        const link = document.querySelector(`.nav-link[href="${href}"], .mobile-nav-link[href="${href}"]`);
+        const target = window.pwLifecycle?.resolveSiteUrl?.(href)
+            || window.pwUrl?.resolveSiteUrl?.(href)
+            || href;
+        const isArcade = target.includes('arcade.html');
+        const link = document.querySelector(
+            `.nav-link[href="${target}"], .mobile-nav-link[href="${target}"], .nav-link[href="${href}"], .mobile-nav-link[href="${href}"]`
+        );
 
         const afterNav = () => {
             if (!scrollSelector) return;
@@ -28,9 +33,9 @@
                 afterNav();
             };
             if (scrollSelector) window.addEventListener('pw:page-ready', onReady);
-            navigateToPage(href, link || null);
+            navigateToPage(target, link || null);
         } else {
-            window.location.href = href;
+            window.location.href = target;
         }
     }
 
