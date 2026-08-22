@@ -58,7 +58,7 @@ Tugas utamamu:
                 return;
             }
 
-            const url = \`https://generativelanguage.googleapis.com/v1beta/models/\${MODEL_NAME}:streamGenerateContent?key=\${this.apiKey}\`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/\${MODEL_NAME}:streamGenerateContent?key=\${this.apiKey}`;
 
             const payload = {
                 systemInstruction: {
@@ -80,7 +80,7 @@ Tugas utamamu:
 
                 if (!response.ok) {
                     const errText = await response.text();
-                    let errMsg = \`Error \${response.status}\`;
+                    let errMsg = `Error \${response.status}`;
                     try {
                         const errJson = JSON.parse(errText);
                         if (errJson.error && errJson.error.message) errMsg = errJson.error.message;
@@ -127,7 +127,7 @@ Tugas utamamu:
                         for (let i = openBrace; i < buffer.length; i++) {
                             const char = buffer[i];
                             if (escape) { escape = false; continue; }
-                            if (char === '\\\\') { escape = true; continue; }
+                            if (char === '') { escape = true; continue; }
                             if (char === '"') { inString = !inString; continue; }
                             
                             if (!inString) {

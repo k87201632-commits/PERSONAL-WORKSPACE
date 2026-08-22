@@ -38,7 +38,7 @@
             // Header
             const header = document.createElement('div');
             header.className = 'ai-panel-header';
-            header.innerHTML = \`
+            header.innerHTML = `
                 <div class="ai-panel-title">
                     <span class="ai-panel-title-icon">✨</span>
                     <span>Assistant</span>
@@ -46,14 +46,14 @@
                 <div class="ai-panel-controls">
                     <button id="aiMinimizeBtn" aria-label="Tutup">✕</button>
                 </div>
-            \`;
+            `;
             
             // Chat Container
             this.chatContainer = document.createElement('div');
             this.chatContainer.className = 'ai-chat-container';
-            this.chatContainer.innerHTML = \`
+            this.chatContainer.innerHTML = `
                 <div class="ai-message ai">Halo! Aku asisten belajarmu. Ada yang bisa dibantu?</div>
-            \`;
+            `;
 
             // Input Area
             const inputArea = document.createElement('div');
@@ -171,7 +171,7 @@
             const msg = document.createElement('div');
             msg.className = 'ai-message-loading';
             msg.id = 'ai-active-loading';
-            msg.innerHTML = \`<span class="loading-dots">Sedang berpikir...</span>\`;
+            msg.innerHTML = `<span class="loading-dots">Sedang berpikir...</span>`;
             this.chatContainer.appendChild(msg);
             this._scrollToBottom();
         }

@@ -47,7 +47,7 @@
             let contextualText = text;
             if (this.history.length === 0 && window.pwAIContext) {
                 const sysContext = window.pwAIContext.getCurrentContextString();
-                contextualText = \`[SISTEM INTERNAL - JANGAN DIBALAS KE USER SECARA LANGSUNG, HANYA JADIKAN KONTEKS LALU JAWAB PERTANYAANNYA]\*n\${sysContext}\*n\*n[PERTANYAAN USER]\*n\${text}\`;
+                contextualText = `[SISTEM INTERNAL - JANGAN DIBALAS KE USER SECARA LANGSUNG, HANYA JADIKAN KONTEKS LALU JAWAB PERTANYAANNYA]\*n\${sysContext}\*n\*n[PERTANYAAN USER]\*n\${text}`;
             }
 
             this.history.push({ role: 'user', parts: [{ text: contextualText }] });

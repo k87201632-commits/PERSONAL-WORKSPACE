@@ -23,7 +23,7 @@
             widget.id = this.containerId;
             widget.style.gridColumn = '1 / -1'; // span full width if in grid
 
-            widget.innerHTML = \`
+            widget.innerHTML = `
                 <div class="ai-dashboard-header">
                     <span>✨</span> AI Briefing
                 </div>
@@ -34,7 +34,7 @@
                     <button class="ai-quick-btn" onclick="window.pwAICore && window.pwAICore.openAndAsk('Apa yang harus gue kerjakan dulu hari ini?')">Apa prioritasku?</button>
                     <button class="ai-quick-btn" onclick="window.pwAICore && window.pwAICore.openAndAsk('Buatkan rencana belajar untuk hari ini')">Rencana belajar</button>
                 </div>
-            \`;
+            `;
 
             stagger1.parentNode.insertBefore(widget, stagger1.nextSibling);
 
@@ -49,7 +49,7 @@
             }
 
             const sysContext = window.pwAIContext.getCurrentContextString();
-            const prompt = \`[SISTEM INTERNAL]\\n\${sysContext}\\n\\nTugas: Berikan "Daily Briefing" singkat (maksimal 2 kalimat) menyapa pengguna (Ridho) dan menyarankan satu fokus utama untuk hari ini berdasarkan jadwal atau tugas yang ada. Jika kosong, beri semangat saja. Jangan gunakan format list, cukup paragraf singkat.\`;
+            const prompt = `[SISTEM INTERNAL]n\${sysContext}nnTugas: Berikan "Daily Briefing" singkat (maksimal 2 kalimat) menyapa pengguna (Ridho) dan menyarankan satu fokus utama untuk hari ini berdasarkan jadwal atau tugas yang ada. Jika kosong, beri semangat saja. Jangan gunakan format list, cukup paragraf singkat.`;
 
             const contentEl = document.getElementById('aiDashboardContent');
             let fullText = "";
