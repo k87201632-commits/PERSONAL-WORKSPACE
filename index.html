@@ -4,7 +4,7 @@
     <script>document.documentElement.classList.add("boot-loading");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beranda | PERSONAL-WORKSPACE â€” Ridho Dharmawan</title>
+    <title>Beranda | PERSONAL-WORKSPACE — Ridho Dharmawan</title>
     <meta name="description" content="Ruang kerja digital pribadi Ridho Dharmawan untuk mengatur aktivitas sekolah, jadwal pelajaran, dan dokumentasi tugas harian.">
     
     <!-- Google Fonts -->
@@ -46,22 +46,22 @@
                 <a href="index.html" class="nav-link active">Beranda</a>
                 <a href="jadwal.html" class="nav-link">Jadwal</a>
                 <a href="tugas.html" class="nav-link">Tugas</a>
-                <a href="arcade.html" class="nav-link">ðŸ•¹ï¸ Arcade</a>
-                <a href="profil.html" class="nav-link">ðŸ‘¤ Profil</a>
+                <a href="arcade.html" class="nav-link">🕹️ï¸ Arcade</a>
+                <a href="profil.html" class="nav-link">👤 Profil</a>
             </nav>
 
             <div class="nav-actions">
                 <div class="theme-selector">
                     <button class="theme-dropdown-btn" onclick="toggleThemeMenu()" aria-label="Pilih Mode Tampilan">
-                        <span id="currentThemeLabel">â˜€ï¸ Terang</span> â–¾
+                        <span id="currentThemeLabel">☀️ï¸ Terang</span> ▾
                     </button>
                     <div class="theme-menu" id="themeMenu">
-                        <button class="theme-option" data-mode="light" onclick="setDisplayMode('light')">â˜€ï¸ Terang</button>
-                        <button class="theme-option" data-mode="dark" onclick="setDisplayMode('dark')">ðŸŒ™ Gelap</button>
+                        <button class="theme-option" data-mode="light" onclick="setDisplayMode('light')">☀️ï¸ Terang</button>
+                        <button class="theme-option" data-mode="dark" onclick="setDisplayMode('dark')">🌙 Gelap</button>
                         <button class="theme-option" data-mode="colorblind" onclick="setDisplayMode('colorblind')">ðŸ‘ï¸ Ramah Warna</button>
                     </div>
                 </div>
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Buka Menu Seluler">â˜°</button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Buka Menu Seluler">☰</button>
             </div>
         </div>
     </header>
@@ -71,8 +71,8 @@
         <a href="index.html" class="mobile-nav-link active">Beranda</a>
         <a href="jadwal.html" class="mobile-nav-link">Jadwal Pelajaran</a>
         <a href="tugas.html" class="mobile-nav-link">Manajemen Tugas</a>
-        <a href="arcade.html" class="mobile-nav-link">ðŸ•¹ï¸ Arcade</a>
-        <a href="profil.html" class="mobile-nav-link">ðŸ‘¤ Profil</a>
+        <a href="arcade.html" class="mobile-nav-link">🕹️ï¸ Arcade</a>
+        <a href="profil.html" class="mobile-nav-link">👤 Profil</a>
     </div>
 
     <!-- Konten Utama Halaman Beranda -->
@@ -98,7 +98,7 @@
 
                 <!-- Focus Mode Entry -->
                 <button type="button" class="workspace-card focus-entry-card" id="focusModeEntryBtn" style="padding: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid var(--border-color); font-family: inherit; color: inherit;">
-                    <div style="font-size: 2rem; margin-bottom: 0.35rem;">ðŸŽ¯</div>
+                    <div style="font-size: 2rem; margin-bottom: 0.35rem;">🎯</div>
                     <div style="font-size: 1rem; font-weight: 800;" class="font-serif">Focus Mode</div>
                     <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600; margin-top: 0.35rem;">Mulai sesi fokus 25 menit</div>
                 </button>
@@ -118,7 +118,7 @@
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                         <h2 style="font-size: 1.25rem; font-weight: 800;" class="font-serif">Status Pelajaran</h2>
-                        <a href="jadwal.html" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Lihat Jadwal â†’</a>
+                        <a href="jadwal.html" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Lihat Jadwal →</a>
                     </div>
                     <!-- Pelajaran Sedang Berlangsung -->
                     <div id="dashboardCurrentClass" style="margin-bottom: 0.75rem;">
@@ -138,7 +138,7 @@
                 <div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h2 style="font-size: 1.25rem; font-weight: 800;" class="font-serif">Tugas Mendatang</h2>
-                        <a href="tugas.html" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Lihat Semua â†’</a>
+                        <a href="tugas.html" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Lihat Semua →</a>
                     </div>
                     <div class="workspace-card" style="padding: 0; overflow: hidden;">
                         <div id="dashboardUpcomingTasks"></div>
@@ -150,7 +150,7 @@
             <!-- Music Player System V2 -->
             <section style="margin-bottom: 2.5rem;" class="stagger-item stagger-3" id="musicSystemSection">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 style="font-size: 1.25rem; font-weight: 800;" class="font-serif">ðŸŽµ Musik Belajar</h2>
+                    <h2 style="font-size: 1.25rem; font-weight: 800;" class="font-serif">🎵 Musik Belajar</h2>
                     
                     <!-- Mode Switcher -->
                     <div class="music-mode-switcher" id="musicModeSwitcher">
@@ -174,7 +174,7 @@
             <section style="margin-bottom: 2.5rem;" class="stagger-item stagger-4">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h2 style="font-size: 1.25rem; font-weight: 800;" class="font-serif">Mata Pelajaran</h2>
-                    <a href="tugas.html" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Semua Pelajaran â†’</a>
+                    <a href="tugas.html" style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary);">Semua Pelajaran →</a>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;" id="dashboardSubjectGrid">
                     <!-- Disuntikkan oleh JS -->
@@ -190,7 +190,7 @@
             <div>
                 <span class="font-serif" style="font-weight: 800; font-size: 1rem;">PERSONAL-WORKSPACE</span>
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-                    &copy; 2026 Ridho Dharmawan Â· SMA Cinta Kasih Tzu Chi. Seluruh hak cipta dilindungi.
+                    &copy; 2026 Ridho Dharmawan · SMA Cinta Kasih Tzu Chi. Seluruh hak cipta dilindungi.
                 </p>
             </div>
             <div style="display: flex; gap: 1.5rem; font-size: 0.8rem; font-weight: 600;">
