@@ -2,7 +2,7 @@
    PERSONAL-WORKSPACE — CONTEXTUAL LOADING SCREEN (LOADING.CSS)
    ========================================================================== */
 
-html.boot-loading body > *:not(#contextualLoadingScreen):not(script):not(style) {
+html.boot-loading body > *:not(#contextualLoadingScreen):not(#loadingScreen):not(script):not(style) {
     opacity: 0 !important;
     visibility: hidden !important;
     transition: none !important;

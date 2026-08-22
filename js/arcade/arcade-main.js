@@ -131,6 +131,31 @@
 
         // Refresh score display
         _refreshScoreCards();
+
+        // Animate and Hide Arcade's dedicated loading screen
+        const arcadeLoader = document.getElementById('loadingScreen');
+        if (arcadeLoader) {
+            const bar = document.getElementById('loadingProgressBar');
+            const pct = document.getElementById('loadingPercentage');
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 15) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    if (bar) bar.style.width = '100%';
+                    if (pct) pct.textContent = '100%';
+                    setTimeout(() => {
+                        arcadeLoader.style.transition = 'opacity 0.6s ease';
+                        arcadeLoader.style.opacity = '0';
+                        setTimeout(() => arcadeLoader.remove(), 600);
+                    }, 400);
+                } else {
+                    if (bar) bar.style.width = progress + '%';
+                    if (pct) pct.textContent = progress + '%';
+                }
+            }, 100);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', _init);

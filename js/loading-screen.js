@@ -6,7 +6,10 @@
 function triggerInitialLoading() {
     if (window.pwLoadingManager) {
         // Jangan tampilkan di halaman arcade (arcade punya loadingnya sendiri)
-        if (window.location.pathname.toLowerCase().includes('arcade')) return;
+        if (window.location.pathname.toLowerCase().includes('arcade')) {
+            document.documentElement.classList.remove('boot-loading');
+            return;
+        }
 
         // Tampilkan loading dengan konteks halaman saat ini
         window.pwLoadingManager.show(window.location.href, true);
