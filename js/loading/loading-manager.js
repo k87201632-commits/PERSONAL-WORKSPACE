@@ -128,7 +128,7 @@ class LoadingManager {
         progressEl.style.width = '0%';
         
         setTimeout(() => {
-            progressEl.style.transition = \`width \${minDuration}ms ease\`;
+            progressEl.style.transition = `width ${minDuration}ms ease`;
             progressEl.style.width = '100%';
         }, 50);
 
