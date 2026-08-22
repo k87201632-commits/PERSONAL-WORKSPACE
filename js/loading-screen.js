@@ -9,7 +9,7 @@ function triggerInitialLoading() {
         if (window.location.pathname.toLowerCase().includes('arcade')) return;
 
         // Tampilkan loading dengan konteks halaman saat ini
-        window.pwLoadingManager.show(window.location.href);
+        window.pwLoadingManager.show(window.location.href, true);
         
         // Halaman sudah siap karena ini initial load (bukan navigasi SPA)
         // Jadi kita beritahu manager bahwa fetch selesai, 

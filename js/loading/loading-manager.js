@@ -56,7 +56,7 @@ class LoadingManager {
 
     _getMessage(context) {
         const config = window.LOADING_CONFIG;
-        if (!config) return { title: 'PERSONAL-WORKSPACE', subtitle: 'Memuat...' };
+        if (!config) return { title: 'PERSONAL-WORKSPACE', subtitle: 'Selamat datang.' };
 
         if (context === 'dashboard') {
             if (this.isFirstDashboardVisit) {
@@ -74,7 +74,7 @@ class LoadingManager {
             }
         }
 
-        return config.messages[context] || { title: 'Memuat...', subtitle: 'Silakan tunggu sebentar.' };
+        return config.messages[context] || { title: 'PERSONAL-WORKSPACE', subtitle: 'Mempersiapkan ruang kerja.' };
     }
 
     _getDuration(context) {
@@ -86,7 +86,7 @@ class LoadingManager {
         return config.durations.normalPage;
     }
 
-    show(href) {
+    show(href, isInitialBoot = false) {
         if (this.isActive) return; // Cegah double loaders
         this.isActive = true;
         this._createDOM();
@@ -105,16 +105,27 @@ class LoadingManager {
         
         // Reset animasi
         screen.classList.remove('fade-out');
-        titleEl.style.animation = 'none';
-        subtitleEl.style.animation = 'none';
+        if (isInitialBoot) {
+            // No fade-in delay for initial boot to prevent blank screen wait
+            screen.style.transition = 'none';
+            titleEl.style.animation = 'none';
+            subtitleEl.style.animation = 'none';
+            titleEl.style.opacity = '1';
+            titleEl.style.transform = 'translateY(0)';
+            subtitleEl.style.opacity = '1';
+            subtitleEl.style.transform = 'translateY(0)';
+        } else {
+            screen.style.transition = '';
+            titleEl.style.animation = 'none';
+            subtitleEl.style.animation = 'none';
+            // Trigger reflow
+            void screen.offsetWidth;
+            titleEl.style.animation = 'clSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+            subtitleEl.style.animation = 'clSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards';
+        }
+
         progressEl.style.transition = 'none';
         progressEl.style.width = '0%';
-
-        // Trigger reflow
-        void screen.offsetWidth;
-
-        titleEl.style.animation = 'clSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-        subtitleEl.style.animation = 'clSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards';
         
         setTimeout(() => {
             progressEl.style.transition = \`width \${minDuration}ms ease\`;
@@ -154,8 +165,13 @@ class LoadingManager {
         if (this.fallbackTimer) clearTimeout(this.fallbackTimer);
         const screen = document.getElementById('contextualLoadingScreen');
         if (screen) {
+            screen.style.transition = '';
             screen.classList.add('fade-out');
         }
+        
+        // Remove boot-loading class if present
+        document.documentElement.classList.remove('boot-loading');
+        
         this.isActive = false;
     }
 }
