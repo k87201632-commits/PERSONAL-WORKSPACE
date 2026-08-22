@@ -16,21 +16,21 @@ function reverseMojibake(str) {
 // Alternatively, use direct replacement to be safe since latin1 doesn't perfectly match Windows-1252 0x80-0x9F
 const replacements = {
   'â€”': '—',
-  'ðŸ•¹ï¸ ': '🕹️',
+  'ðŸ•¹ ': '🕹️',
   'ðŸ•¹': '🕹️',
   'ðŸ‘¤': '👤',
-  'â˜€ï¸ ': '☀️',
+  'â˜€ ': '☀️',
   'â˜€': '☀️',
   'â–¾': '▾',
   'ðŸŒ™': '🌙',
-  'ðŸ‘ ï¸ ': '👁️',
+  'ðŸ‘  ': '👁️',
   'ðŸ‘ ': '👁️',
   'â˜°': '☰',
   'ðŸŽ¯': '🎯',
   'â†’': '→',
   'ðŸŽµ': '🎵',
   'Â·': '·',
-  'ï¸ ': '' // Remove dangling VS16 if any
+  ' ': '' // Remove dangling VS16 if any
 };
 
 files.forEach(f => {
