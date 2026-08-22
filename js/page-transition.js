@@ -132,6 +132,10 @@ function loadPageContent(href, link, pushState = true) {
             if (window.pwLifecycle && typeof window.pwLifecycle.runPageInit === 'function') {
                 window.pwLifecycle.runPageInit(resolved);
             }
+            
+            if (window.pwLoadingManager) {
+                window.pwLoadingManager.markPageReady();
+            }
         })
         .catch(err => {
             console.error('Navigasi SPA gagal, fallback reload:', err);
@@ -140,6 +144,10 @@ function loadPageContent(href, link, pushState = true) {
 }
 
 function navigateToPage(href, link) {
+    if (window.pwLoadingManager) {
+        window.pwLoadingManager.show(href);
+    }
+    
     const mainContent = document.querySelector('.main-content');
     if (mainContent) {
         mainContent.style.opacity = '0';
@@ -147,7 +155,7 @@ function navigateToPage(href, link) {
         mainContent.style.transition = 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
     }
 
-    setTimeout(() => loadPageContent(href, link, true), 220);
+    setTimeout(() => loadPageContent(href, link, true), 50); // Fetch happens almost immediately now, let loader handle delays
 }
 
 if (window.pwLifecycle) {

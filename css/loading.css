@@ -1,0 +1,86 @@
+/* ==========================================================================
+   PERSONAL-WORKSPACE — CONTEXTUAL LOADING SCREEN (LOADING.CSS)
+   ========================================================================== */
+
+.contextual-loading-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.contextual-loading-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.contextual-loading-screen .loading-box {
+    text-align: center;
+    max-width: 480px;
+    width: 90%;
+}
+
+.contextual-loading-screen .loading-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.contextual-loading-screen .loading-subtitle {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.contextual-loading-screen .loading-progress-track {
+    width: 60px;
+    height: 3px;
+    background-color: var(--border-color);
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    border-radius: 3px;
+}
+
+.contextual-loading-screen .loading-progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: var(--text-primary);
+}
+
+@keyframes clSlideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .contextual-loading-screen .loading-title,
+    .contextual-loading-screen .loading-subtitle {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+    
+    .contextual-loading-screen .loading-progress-bar {
+        transition: none !important;
+    }
+}

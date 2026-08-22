@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arcade | PERSONAL-WORKSPACE — Ridho Dharmawan</title>
-    <meta name="description" content="PERSONAL-WORKSPACE Arcade — Main game, raih XP, dan unlock achievement sambil belajar.">
+    <title>Arcade | PERSONAL-WORKSPACE â€” Ridho Dharmawan</title>
+    <meta name="description" content="PERSONAL-WORKSPACE Arcade â€” Main game, raih XP, dan unlock achievement sambil belajar.">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/responsive.css">
     <link rel="stylesheet" href="css/arcade.css">
+    <link rel="stylesheet" href="css/loading.css">
 </head>
 <body>
 
@@ -48,22 +49,22 @@
                 <a href="index.html" class="nav-link">Beranda</a>
                 <a href="jadwal.html" class="nav-link">Jadwal</a>
                 <a href="tugas.html" class="nav-link">Tugas</a>
-                <a href="arcade.html" class="nav-link active">🕹️ Arcade</a>
-                <a href="profil.html" class="nav-link">👤 Profil</a>
+                <a href="arcade.html" class="nav-link active">ðŸ•¹ï¸ Arcade</a>
+                <a href="profil.html" class="nav-link">ðŸ‘¤ Profil</a>
             </nav>
 
             <div class="nav-actions">
                 <div class="theme-selector">
                     <button class="theme-dropdown-btn" onclick="toggleThemeMenu()" aria-label="Pilih Mode Tampilan">
-                        <span id="currentThemeLabel">☀️ Terang</span> ▾
+                        <span id="currentThemeLabel">â˜€ï¸ Terang</span> â–¾
                     </button>
                     <div class="theme-menu" id="themeMenu">
-                        <button class="theme-option" data-mode="light" onclick="setDisplayMode('light')">☀️ Terang</button>
-                        <button class="theme-option" data-mode="dark" onclick="setDisplayMode('dark')">🌙 Gelap</button>
-                        <button class="theme-option" data-mode="colorblind" onclick="setDisplayMode('colorblind')">👁️ Ramah Warna</button>
+                        <button class="theme-option" data-mode="light" onclick="setDisplayMode('light')">â˜€ï¸ Terang</button>
+                        <button class="theme-option" data-mode="dark" onclick="setDisplayMode('dark')">ðŸŒ™ Gelap</button>
+                        <button class="theme-option" data-mode="colorblind" onclick="setDisplayMode('colorblind')">ðŸ‘ï¸ Ramah Warna</button>
                     </div>
                 </div>
-                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Buka Menu Seluler">☰</button>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Buka Menu Seluler">â˜°</button>
             </div>
         </div>
     </header>
@@ -73,8 +74,8 @@
         <a href="index.html" class="mobile-nav-link">Beranda</a>
         <a href="jadwal.html" class="mobile-nav-link">Jadwal Pelajaran</a>
         <a href="tugas.html" class="mobile-nav-link">Manajemen Tugas</a>
-        <a href="arcade.html" class="mobile-nav-link active">🕹️ Arcade</a>
-        <a href="profil.html" class="mobile-nav-link">👤 Profil</a>
+        <a href="arcade.html" class="mobile-nav-link active">ðŸ•¹ï¸ Arcade</a>
+        <a href="profil.html" class="mobile-nav-link">ðŸ‘¤ Profil</a>
     </div>
 
     <!-- Konten Utama Arcade -->
@@ -84,7 +85,7 @@
             <!-- Hero + XP Card -->
             <section class="arcade-hero stagger-item stagger-1">
                 <div class="arcade-hero-left">
-                    <h1 class="font-serif arcade-title">🕹️ PERSONAL-WORKSPACE ARCADE</h1>
+                    <h1 class="font-serif arcade-title">ðŸ•¹ï¸ PERSONAL-WORKSPACE ARCADE</h1>
                     <p class="arcade-subtitle">Bermain, Raih XP, Unlock Achievement</p>
                 </div>
                 <div class="arcade-hero-right">
@@ -108,37 +109,37 @@
                 <h2 class="font-serif" style="font-size:1.25rem;font-weight:800;margin-bottom:1rem;">Pilih Game</h2>
                 <div class="arcade-game-grid" id="arcadeGameGrid">
                     <button class="arcade-game-card active" data-game="snake" id="gameCardSnake">
-                        <div class="arcade-game-icon">🐍</div>
+                        <div class="arcade-game-icon">ðŸ</div>
                         <div class="arcade-game-name">Snake</div>
                         <div class="arcade-game-hs" id="snakeHS">Best: 0</div>
                     </button>
                     <button class="arcade-game-card" data-game="memory" id="gameCardMemory">
-                        <div class="arcade-game-icon">🃏</div>
+                        <div class="arcade-game-icon">ðŸƒ</div>
                         <div class="arcade-game-name">Memory</div>
-                        <div class="arcade-game-hs" id="memoryHS">Best: — moves</div>
+                        <div class="arcade-game-hs" id="memoryHS">Best: â€” moves</div>
                     </button>
                     <button class="arcade-game-card" data-game="tictactoe" id="gameCardTicTacToe">
-                        <div class="arcade-game-icon">⭕</div>
+                        <div class="arcade-game-icon">â­•</div>
                         <div class="arcade-game-name">Tic-Tac-Toe</div>
                         <div class="arcade-game-hs" id="tttHS">Wins: 0</div>
                     </button>
                     <button class="arcade-game-card" data-game="2048" id="gameCard2048">
-                        <div class="arcade-game-icon">🔢</div>
+                        <div class="arcade-game-icon">ðŸ”¢</div>
                         <div class="arcade-game-name">2048</div>
                         <div class="arcade-game-hs" id="game2048HS">Best: 0</div>
                     </button>
                     <button class="arcade-game-card" data-game="minesweeper" id="gameCardMinesweeper">
-                        <div class="arcade-game-icon">💣</div>
+                        <div class="arcade-game-icon">ðŸ’£</div>
                         <div class="arcade-game-name">Minesweeper</div>
                         <div class="arcade-game-hs" id="minesweeperHS">Wins: 0</div>
                     </button>
                     <button class="arcade-game-card" data-game="reaction" id="gameCardReaction">
-                        <div class="arcade-game-icon">⚡</div>
+                        <div class="arcade-game-icon">âš¡</div>
                         <div class="arcade-game-name">Reaction</div>
-                        <div class="arcade-game-hs" id="reactionHS">Best: —</div>
+                        <div class="arcade-game-hs" id="reactionHS">Best: â€”</div>
                     </button>
                     <button class="arcade-game-card" data-game="flappy" id="gameCardFlappy">
-                        <div class="arcade-game-icon">🪽</div>
+                        <div class="arcade-game-icon">ðŸª½</div>
                         <div class="arcade-game-name">Flappy Mini</div>
                         <div class="arcade-game-hs" id="flappyHS">Best: 0</div>
                     </button>
@@ -152,7 +153,7 @@
                     <!-- SNAKE -->
                     <div class="arcade-game-panel" id="panelSnake">
                         <div class="arcade-game-panel-header">
-                            <span>🐍 Snake</span>
+                            <span>ðŸ Snake</span>
                             <div class="arcade-score-display">
                                 <span>Score: <strong id="snakeScore">0</strong></span>
                                 <span>Best: <strong id="snakeBestScore">0</strong></span>
@@ -161,25 +162,25 @@
                         <canvas id="snakeCanvas" class="arcade-canvas"></canvas>
                         <div class="arcade-game-controls">
                             <div class="arcade-mobile-dpad" id="snakeDpad">
-                                <button class="dpad-btn dpad-up"     data-dir="up">▲</button>
-                                <button class="dpad-btn dpad-left"   data-dir="left">◀</button>
-                                <button class="dpad-btn dpad-center" id="snakeStartBtn">▶</button>
-                                <button class="dpad-btn dpad-right"  data-dir="right">▶</button>
-                                <button class="dpad-btn dpad-down"   data-dir="down">▼</button>
+                                <button class="dpad-btn dpad-up"     data-dir="up">â–²</button>
+                                <button class="dpad-btn dpad-left"   data-dir="left">â—€</button>
+                                <button class="dpad-btn dpad-center" id="snakeStartBtn">â–¶</button>
+                                <button class="dpad-btn dpad-right"  data-dir="right">â–¶</button>
+                                <button class="dpad-btn dpad-down"   data-dir="down">â–¼</button>
                             </div>
                             <div class="arcade-btn-row">
-                                <button class="arcade-action-btn" id="snakeRestartBtn">↺ Restart</button>
+                                <button class="arcade-action-btn" id="snakeRestartBtn">â†º Restart</button>
                             </div>
                         </div>
                         <p style="text-align:center;font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">
-                            Arrow keys / WASD · Swipe di layar · D-Pad untuk mobile
+                            Arrow keys / WASD Â· Swipe di layar Â· D-Pad untuk mobile
                         </p>
                     </div>
 
                     <!-- MEMORY -->
                     <div class="arcade-game-panel" id="panelMemory" style="display:none">
                         <div class="arcade-game-panel-header">
-                            <span>🃏 Memory</span>
+                            <span>ðŸƒ Memory</span>
                             <div class="arcade-score-display">
                                 <span>Moves: <strong id="memoryMoves">0</strong></span>
                                 <span>Time: <strong id="memoryTimer">0:00</strong></span>
@@ -187,14 +188,14 @@
                         </div>
                         <div class="memory-grid" id="memoryGrid"></div>
                         <div class="arcade-btn-row" style="margin-top:1rem">
-                            <button class="arcade-action-btn" id="memoryRestartBtn">↺ Restart</button>
+                            <button class="arcade-action-btn" id="memoryRestartBtn">â†º Restart</button>
                         </div>
                     </div>
 
                     <!-- TIC-TAC-TOE -->
                     <div class="arcade-game-panel" id="panelTicTacToe" style="display:none">
                         <div class="arcade-game-panel-header">
-                            <span>⭕ Tic-Tac-Toe</span>
+                            <span>â­• Tic-Tac-Toe</span>
                             <div class="arcade-score-display">
                                 <span>You: <strong id="tttScorePlayer">0</strong></span>
                                 <span>AI: <strong id="tttScoreAI">0</strong></span>
@@ -207,14 +208,14 @@
                         <div class="ttt-board" id="tttBoard"></div>
                         <div id="tttStatus" class="ttt-status">Your turn (X)</div>
                         <div class="arcade-btn-row" style="margin-top:0.75rem">
-                            <button class="arcade-action-btn" id="tttRestartBtn">↺ New Game</button>
+                            <button class="arcade-action-btn" id="tttRestartBtn">â†º New Game</button>
                         </div>
                     </div>
 
                     <!-- 2048 -->
                     <div class="arcade-game-panel" id="panel2048" style="display:none">
                         <div class="arcade-game-panel-header">
-                            <span>🔢 2048</span>
+                            <span>ðŸ”¢ 2048</span>
                             <div class="arcade-score-display">
                                 <span>Score: <strong id="game2048Score">0</strong></span>
                                 <span>Best: <strong id="game2048Best">0</strong></span>
@@ -222,36 +223,36 @@
                         </div>
                         <div class="game2048-grid" id="game2048Grid"></div>
                         <div class="arcade-btn-row" style="margin-top:1rem">
-                            <button class="arcade-action-btn" id="game2048RestartBtn">↺ Restart</button>
+                            <button class="arcade-action-btn" id="game2048RestartBtn">â†º Restart</button>
                         </div>
                         <p style="text-align:center;font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">
-                            Arrow keys / WASD · Swipe di layar
+                            Arrow keys / WASD Â· Swipe di layar
                         </p>
                     </div>
 
                     <!-- MINESWEEPER -->
                     <div class="arcade-game-panel" id="panelMinesweeper" style="display:none">
                         <div class="arcade-game-panel-header">
-                            <span>💣 Minesweeper</span>
+                            <span>ðŸ’£ Minesweeper</span>
                             <div class="arcade-score-display">
-                                <span>9×9 · 10 mines</span>
+                                <span>9Ã—9 Â· 10 mines</span>
                             </div>
                         </div>
                         <div class="minesweeper-board" id="minesweeperBoard"></div>
-                        <div id="minesweeperStatus" class="minesweeper-status">Left-click reveal · Right-click flag</div>
+                        <div id="minesweeperStatus" class="minesweeper-status">Left-click reveal Â· Right-click flag</div>
                         <div class="arcade-btn-row" style="margin-top:0.75rem">
-                            <button class="arcade-action-btn" id="minesweeperRestartBtn">↺ Restart</button>
+                            <button class="arcade-action-btn" id="minesweeperRestartBtn">â†º Restart</button>
                         </div>
                     </div>
 
                     <!-- REACTION TEST -->
                     <div class="arcade-game-panel" id="panelReaction" style="display:none">
                         <div class="arcade-game-panel-header">
-                            <span>⚡ Reaction Test</span>
+                            <span>âš¡ Reaction Test</span>
                             <div class="arcade-score-display">
-                                <span>Time: <strong id="reactionTime">—</strong></span>
-                                <span>Best: <strong id="reactionBest">—</strong></span>
-                                <span>Avg: <strong id="reactionAvg">—</strong></span>
+                                <span>Time: <strong id="reactionTime">â€”</strong></span>
+                                <span>Best: <strong id="reactionBest">â€”</strong></span>
+                                <span>Avg: <strong id="reactionAvg">â€”</strong></span>
                             </div>
                         </div>
                         <div class="reaction-pad reaction-pad-idle" id="reactionPad">
@@ -259,14 +260,14 @@
                             <span class="reaction-sub">Klik untuk mulai</span>
                         </div>
                         <div class="arcade-btn-row" style="margin-top:0.75rem">
-                            <button class="arcade-action-btn" id="reactionRestartBtn">↺ Reset</button>
+                            <button class="arcade-action-btn" id="reactionRestartBtn">â†º Reset</button>
                         </div>
                     </div>
 
                     <!-- FLAPPY MINI -->
                     <div class="arcade-game-panel" id="panelFlappy" style="display:none">
                         <div class="arcade-game-panel-header">
-                            <span>🪽 Flappy Mini</span>
+                            <span>ðŸª½ Flappy Mini</span>
                             <div class="arcade-score-display">
                                 <span>Score: <strong id="flappyScore">0</strong></span>
                                 <span>Best: <strong id="flappyBest">0</strong></span>
@@ -274,7 +275,7 @@
                         </div>
                         <canvas id="flappyCanvas" class="arcade-canvas"></canvas>
                         <div class="arcade-btn-row" style="margin-top:0.75rem">
-                            <button class="arcade-action-btn" id="flappyRestartBtn">↺ Restart</button>
+                            <button class="arcade-action-btn" id="flappyRestartBtn">â†º Restart</button>
                         </div>
                         <p style="text-align:center;font-size:0.73rem;color:var(--text-muted);margin-top:0.5rem;">
                             Tap / Space to flap
@@ -286,7 +287,7 @@
 
             <!-- Achievements -->
             <section class="stagger-item stagger-5" style="margin-top:2rem;margin-bottom:2.5rem">
-                <h2 class="font-serif" style="font-size:1.25rem;font-weight:800;margin-bottom:1rem;">🏅 Achievements</h2>
+                <h2 class="font-serif" style="font-size:1.25rem;font-weight:800;margin-bottom:1rem;">ðŸ… Achievements</h2>
                 <div class="achievement-grid" id="achievementGrid">
                     <!-- injected by achievement-manager.js -->
                 </div>
@@ -301,7 +302,7 @@
             <div>
                 <span class="font-serif" style="font-weight: 800; font-size: 1rem;">PERSONAL-WORKSPACE</span>
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
-                    &copy; 2026 Ridho Dharmawan · SMA Cinta Kasih Tzu Chi. Seluruh hak cipta dilindungi.
+                    &copy; 2026 Ridho Dharmawan Â· SMA Cinta Kasih Tzu Chi. Seluruh hak cipta dilindungi.
                 </p>
             </div>
             <div style="display: flex; gap: 1.5rem; font-size: 0.8rem; font-weight: 600;">
@@ -319,6 +320,10 @@
     <script src="js/loading-screen.js"></script>
     <script src="js/toast.js"></script>
     <script src="js/init-lifecycle.js"></script>
+        <!-- Contextual Loading System -->
+    <script src="js/loading/loading-messages.js"></script>
+    <script src="js/loading/loading-manager.js"></script>
+    <script src="js/loading-screen.js"></script>
     <script src="js/page-transition.js"></script>
 
     <!-- Gamification -->
@@ -343,3 +348,4 @@
 
 </body>
 </html>
+
